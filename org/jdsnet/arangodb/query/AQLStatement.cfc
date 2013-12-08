@@ -21,48 +21,35 @@
  */
 
 /**
- * Collection
+ * AQLStatement
  * 
  * @author jesse.shaffer
- * @date 11/30/13
+ * @date 12/7/13
  **/
 component accessors=true output=false persistent=false {
-
-	property struct Properties;
-	property string Name;
-	property Database Database;
 	
-	public Document function newDocument(struct data={}) {
-		return new Document(data,this);
+	property string							Statement;
+	property org.jdsnet.arangodb.Connection	Connection;
+	property numeric						BatchSize;
+	property boolean						ShowCount;
+	property boolean						ShowFullCount;
+	
+	variables.boundParams = {};
+	variables.batchSize = 0;
+	variables.showCount=false;
+	variables.showFullCount=false;
+	
+	public Cursor function execute() {
+		return new Cursor(this.getConnection(),this);
 	}
 	
-	public Document function save(record) {
-		if (isInstanceOf(record,"Document")) {
-			record.save();
-		} else if (isStruct(record)) {
-			record = this.newDocument(record).save();
-		} else if (isObject(record)) {
-			var dataStruct={}
-			for (prop)
-		}
-		
-		return record;
+	public AQLStatement function bind(required string param, any value) {
+		boundParams[param] = value;
+		return this;
 	}
 	
-	public Document function getDocumentByKey(required string key) {
-		return this.createDocument(this.getDatabase().getConnection().openService("document").get("#this.getName()#/#key#"));
+	package function getBoundParams() {
+		return boundParams;
 	}
 	
-	public function truncate() {
-		this.getDatabase().getConnection().openService("collection").put("#this.getName()#/truncate");
-	}
-	
-	public function getProperties() {
-		if (!structKeyExists(variables,"properties"))
-			variables.properties = this.getDatabase().getConnection().openService("collection").get("#this.getName()#/properties");
-		
-		return variables.properties;
-	}
-	public function setProperties() {}
-
 }

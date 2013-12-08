@@ -35,15 +35,15 @@ component accessors=true output=false persistent=false {
 		this.setConnection(arguments.connection);
 		this.setName(arguments.name);
 		
-		variables.dbService = this.getConnection().openService("database",this);
-		variables.cService = this.getConnection().openService("collection",this);
+		variables.dbService = this.getConnection().openService("database",this.getName());
+		variables.cService = this.getConnection().openService("collection",this.getName());
 		
 		return this;
 	}
 	
 	public function getCollections(string type="user") {
 		
-		var allCollections = this.getConnection().openService("collection",this.getName()).get();
+		var allCollections = cService.get();
 		
 		var retval = allCollections;
 		switch(arguments.type) {
@@ -80,7 +80,7 @@ component accessors=true output=false persistent=false {
 			 "name"			= arguments.name
 			,"waitForSync"	= false
 			,"doCompact"	= true
-		//	,"journalSize"	= << configured in arangod.conf >>
+		//	,"journalSize"	= << default is configured in arangod.conf >>
 			,"isVolatile"	= false
 			,"keyOptions"	= {
 				 "type"				= "traditional"

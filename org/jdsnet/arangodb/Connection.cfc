@@ -62,7 +62,7 @@ component accessors=true output=false persistent=false {
 	}
 	
 	public query.AQLStatement function prepareStatement(required string aql) {
-		return new query.AQLStatement(aql=aql,connection=this);
+		return new query.AQLStatement(statement=aql,connection=this);
 	}
 	
 }
