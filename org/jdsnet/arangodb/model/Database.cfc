@@ -28,6 +28,8 @@
  **/
 component accessors=true output=false persistent=false {
 	
+	property string Id;
+	property boolean IsSystem;
 	property Connection Connection;
 	property string Name;
 	
@@ -41,7 +43,29 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 	
-	public function getCollections(string type="user") {
+	private void function setId(id) {variables.id=arguments.id;}
+	public string function getId() {
+		if (isNull(variables.id))
+			structappend(variables,this.getInfo());
+		return variables.id;
+	}
+	
+	private void function setIsSystem(boolean isSys) {variables.isSystem=arguments.isSys;}
+	public string function getIsSystem() {
+		if (isNull(variables.isSystem))
+			structappend(variables,this.getInfo());
+		return variables.isSystem;
+	}
+	
+	public struct function getInfo() {
+		return this.getConnection().openService("database/current",this.getName()).get().result;
+	}
+	
+	public org.jdsnet.arangodb.query.AQLStatement function prepareStatement(required string aql) {
+		return new org.jdsnet.arangodb.query.AQLStatement(statement=aql,database=this);
+	}
+	
+	public struct function getCollections(string type="user") {
 		
 		var allCollections = cService.get();
 		
@@ -74,7 +98,7 @@ component accessors=true output=false persistent=false {
 		return retval;
 	}
 	
-	public  function createCollection(required string name, struct options) {
+	public Collection function createCollection(required string name, struct options) {
 		if (isNull(options)) options={};
 		var collection = {
 			 "name"			= arguments.name
@@ -90,15 +114,16 @@ component accessors=true output=false persistent=false {
 		structAppend(collection,options);
 		options["isSystem"]=false;
 		options["type"]=2;
-		writedump(cService.post(collection));
-		
+		var result = cService.post(collection);
+		result.database=this;
+		return new Collection(argumentCollection=result);
 	}
 	
-	public  function dropCollection(required string name) {
+	public struct function dropCollection(required string name) {
 		return cService.delete(name);
 	}
 	
-	public  function getCollection(required string name) {
+	public Collection function getCollection(required string name) {
 		return new Collection(name=name, database=this);
 	}
 	

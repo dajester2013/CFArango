@@ -31,7 +31,6 @@ component accessors=true output=false persistent=false {
 	property string Protocol default="http";
 	property string Host default="localhost";
 	property string Port default=8529;
-	property string Database default="_system";
 	property Credentials Credentials;
 	
 	variables.serviceCache = {};
@@ -42,7 +41,7 @@ component accessors=true output=false persistent=false {
 		return this.openService("version").get().version;
 	}
 	
-	public ArangoDBRestClient function openService(string resource, string database=this.getDatabase()) {
+	public ArangoDBRestClient function openService(string resource, string database="_system") {
 		return new ArangoDBRestClient(
 			 baseUrl = this.getProtocol() & "://" & this.getHost() & ":" & this.getPort() & "/_db/" & arguments.database & "/_api/" & arguments.resource
 			,credentials = this.getCredentials()
@@ -53,16 +52,8 @@ component accessors=true output=false persistent=false {
 		return this.openService("database/user","_system").get().result;
 	}
 	
-	public struct function getDatabaseInfo() {
-		return this.openService("database/current").get().result;
-	}
-	
 	public model.Database function openDatabase(required string name) {
 		return new model.Database(name=name, connection=this);
-	}
-	
-	public query.AQLStatement function prepareStatement(required string aql) {
-		return new query.AQLStatement(statement=aql,connection=this);
 	}
 	
 }

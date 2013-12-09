@@ -36,7 +36,6 @@ component accessors=true output=false persistent=false {
 	property struct currentDocument;
 	
 	variables.currentDocument={};
-	variables.docService="";
 	variables.dirty=true;
 	
 	public Document function init(struct document={}, Collection collection) {
@@ -55,8 +54,19 @@ component accessors=true output=false persistent=false {
 		if (structKeyExists(arguments.document,"_key"))	this.setKey(arguments.document._key);
 		if (structKeyExists(arguments.document,"_rev"))	this.setRev(arguments.document._rev);
 		
+		return this;
+	}
+	
+	public Document function setCollection(Collection collection) {
 		variables.COL_RES = "?collection="&collection.getName();
-		variables.docService = collection.getDatabase().getConnection().openService("document");
+		variables.collection=collection;
+		
+		if (!isNull(this.getId()) && listFirst(this.getId(),"/") != collection.getName()) {
+			StructDelete(variables,"id");
+			StructDelete(variables,"_id");
+			StructDelete(variables.currentDocument,"_id");
+			StructDelete(variables.originalDocument,"_id");
+		}
 		
 		return this;
 	}
@@ -66,6 +76,14 @@ component accessors=true output=false persistent=false {
 			variables.currentDocument[key] = value;
 		
 		variables.dirty = !structKeyExists(variables.originalDocument,key) || variables.currentDocument[key] != variables.originalDocument[key];
+		
+		return this;
+	}
+	
+	public Document function putAll(required struct values) {
+		StructAppend(variables.currentDocument,values);
+		
+		variables.dirty = true;
 		
 		return this;
 	}
@@ -82,16 +100,23 @@ component accessors=true output=false persistent=false {
 	public Document function save(boolean force=false) {
 		if (!force && !dirty) return this;
 		
+		if (isNull(this.getCollection()))
+			throw("No collection specified.");
+		
 		if (!isNull(this.getId()))
-			var res = variables.docService.put(this.getId(),variables.currentDocument);
+			var res = openService("document").put(this.getId(),variables.currentDocument);
 		else
-			var res = variables.docService.post(variables.COL_RES,variables.currentDocument)
+			var res = openService("document").post(variables.COL_RES,variables.currentDocument)
 		
 		structappend(variables.currentDocument,res);
 		structappend(variables.originalDocument,res);
 		
-		for (var k in res)
-			variables[k.replace("_","")] = res[k];
+		if (structKeyExists(res,"_id"))
+			variables.id=res._id;
+		if (structKeyExists(res,"_key"))
+			this.setKey(res._key);
+		if (structKeyExists(res,"_rev"))
+			this.setRev(res._rev);
 		
 		dirty=false;
 		return this;
@@ -112,4 +137,7 @@ component accessors=true output=false persistent=false {
 	public function getCurrentDocument() {return this.get();}
 	public function getOriginalDocument() {return duplicate(variables.originaldocument);}
 	
+	private function openService(required string svc) {
+		return this.getCollection().getDatabase().getConnection().openService(svc,this.getCollection().getDatabase().getName());
+	}
 }

@@ -28,28 +28,33 @@
  **/
 component accessors=true output=false persistent=false {
 	
-	property string							Statement;
-	property org.jdsnet.arangodb.Connection	Connection;
-	property numeric						BatchSize;
-	property boolean						ShowCount;
-	property boolean						ShowFullCount;
+	property string								Statement;
+	property org.jdsnet.arangodb.model.Database	Database;
+	property numeric							BatchSize;
+	property boolean							ShowCount;
+	property boolean							ShowFullCount;
 	
 	variables.boundParams = {};
 	variables.batchSize = 0;
 	variables.showCount=false;
 	variables.showFullCount=false;
 	
-	public Cursor function execute() {
-		return new Cursor(this.getConnection(),this);
+	/**
+	 * Execute the statement.
+	 * @boundParams A struct of named params to bind to the execution
+	 */
+	public Cursor function execute(struct boundParams=variables.boundParams) {
+		return new Cursor(this.getDatabase(),this, arguments.boundParams);
 	}
 	
-	public AQLStatement function bind(required string param, any value) {
-		boundParams[param] = value;
+	/**
+	 * Bind a named param to a value.
+	 * @name Param name
+	 * @value Param value
+	 */
+	public AQLStatement function bind(required string name, any value) {
+		boundParams[name] = value;
 		return this;
-	}
-	
-	package function getBoundParams() {
-		return boundParams;
 	}
 	
 }

@@ -36,33 +36,58 @@ component accessors=true output=false persistent=false {
 		return new Document(data,this);
 	}
 	
-	public Document function save(record) {
+	public Document function save(required record) {
 		if (isInstanceOf(record,"Document")) {
 			record.save();
-		} else if (isStruct(record)) {
+		} else if (isStruct(record) || isObject(record)) {
 			record = this.newDocument(record).save();
-		} else if (isObject(record)) {
-			var dataStruct={}
-			for (prop)
 		}
 		
 		return record;
 	}
 	
+	public struct function load() {
+		return openService("collection").put("#this.getName()#/load");
+	}
+	
+	public struct function unload() {
+		return openService("collection").put("#this.getName()#/unload");
+	}
+	
 	public Document function getDocumentByKey(required string key) {
-		return this.createDocument(this.getDatabase().getConnection().openService("document").get("#this.getName()#/#key#"));
+		return this.createDocument(openService("document").get("#this.getName()#/#key#"));
 	}
 	
 	public function truncate() {
-		this.getDatabase().getConnection().openService("collection").put("#this.getName()#/truncate");
+		return openService("collection").put("#this.getName()#/truncate");
 	}
+	
+	public struct function drop() {
+		return this.getDatabase().dropCollection(this.getName());
+	}
+	
+	public boolean function rotate() {
+		return openService("collection").put("#this.getName()#/rotate").result;
+	}
+	
+	// TODO: fulltext query
+	// TODO: query all by example
+	// TODO: update all by example
+	// TODO: replace all by example
+	// TODO: remove all by example
+	// TODO: create index
+	// TODO: drop index
+	
 	
 	public function getProperties() {
 		if (!structKeyExists(variables,"properties"))
-			variables.properties = this.getDatabase().getConnection().openService("collection").get("#this.getName()#/properties");
+			variables.properties = openService("collection").get("#this.getName()#/properties");
 		
 		return variables.properties;
 	}
-	public function setProperties() {}
+	private function setProperties() {}
 
+	private function openService(required string svc) {
+		return this.getDatabase().getConnection().openService(svc,this.getDatabase().getName());
+	}
 }
