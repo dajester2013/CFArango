@@ -142,7 +142,6 @@ component accessors=true output=false persistent=false {
 		});
 		curBatch.curIdx=0;
 		curBatch.rCount=arraylen(curBatch.result);
-		eof=!curBatch.hasMore;
 		
 		if (structKeyExists(curBatch,"id"))
 			this.setId(curBatch.id);
