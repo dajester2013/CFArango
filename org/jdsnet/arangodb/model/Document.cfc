@@ -108,8 +108,10 @@ component accessors=true output=false persistent=false {
 		else
 			var res = openService("document").post(variables.COL_RES,variables.currentDocument)
 		
+		
+		structDelete(res,"error");
 		structappend(variables.currentDocument,res);
-		structappend(variables.originalDocument,res);
+		structappend(variables.originalDocument,variables.currentDocument);
 		
 		if (structKeyExists(res,"_id"))
 			variables.id=res._id;
