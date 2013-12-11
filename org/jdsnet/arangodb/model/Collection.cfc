@@ -70,14 +70,95 @@ component accessors=true output=false persistent=false {
 		return openService("collection").put("#this.getName()#/rotate").result;
 	}
 	
-	// TODO: fulltext query
-	// TODO: query all by example
-	// TODO: update all by example
-	// TODO: replace all by example
-	// TODO: remove all by example
-	// TODO: create index
-	// TODO: drop index
 	
+	public array function queryByExample(required struct example, any limit=0, numeric skip=0, boolean raw=false) {
+		var response = {};
+		if (limit === true) {
+			response = openService("simple/first-example").put({
+				 "example"		: arguments.example
+				,"collection"	: this.getName()
+			});
+		} else {
+			response = openService("simple/by-example").put({
+				 "example"		: arguments.example
+				,"collection"	: this.getName()
+				,"limit"		: arguments.limit
+				,"skip"			: arguments.skip
+			});
+		}
+		
+		if (!raw) {
+			for (var i=1; i<=arraylen(response.result); i++) {
+				response.result[i] = this.newDocument(response.result[i]);
+			}
+		}
+		
+		return response.result;
+	}
+	
+	public array function fullTextSearch(required string attribute, required string searchText, boolean raw=false) {
+		var response = openService("simple/by-example").put({
+			"collection":this.getName()
+			,"attribute":arguments.attribute
+			,"query":arguments.searchText
+		});
+		
+		return response.result;
+	}
+	
+	public struct function updateMatching(required struct example, required struct update, any limit=0, boolean keepNull=true, boolean waitForSync) {
+		var srequest = {
+			 "example"		: arguments.example
+			,"collection"	: this.getName()
+			,"newValue"		: update
+			,"limit"		: arguments.limit
+			,"keepNull"		: arguments.keepNull
+		};
+		if (!isNull(waitForSync))
+			srequest["waitForSync"] = arguments.waitForSync;
+		
+		var response = openService("simple/update-by-example").put(srequest);
+		
+		return response;
+	}
+	
+	
+	public struct function replaceMatching(required struct example, required struct update, any limit=0, boolean waitForSync) {
+		var srequest = {
+			 "example"		: arguments.example
+			,"collection"	: this.getName()
+			,"newValue"		: update
+			,"limit"		: arguments.limit
+		};
+		if (!isNull(waitForSync))
+			srequest["waitForSync"] = arguments.waitForSync;
+		
+		var response = openService("simple/replace-by-example").put(srequest);
+		
+		return response;
+	}
+	
+	public struct function deleteMatching(required struct example, any limit=0, boolean waitForSync) {
+		var srequest = {
+			 "example"		: arguments.example
+			,"collection"	: this.getName()
+			,"limit"		: arguments.limit
+		};
+		if (!isNull(waitForSync))
+			srequest["waitForSync"] = arguments.waitForSync;
+		
+		var response = openService("simple/replace-by-example").put(srequest);
+		
+		return response;
+	}
+	
+	public struct function createIndex(required struct indexParams) {
+		return openService("index").post("?collection=#this.getName#",indexParams);
+	}
+	
+	public struct function dropIndex(required string indexId) {
+		return openService("index").delete(this.getName() & "/" & listRest(indexId,"/"));
+	}
 	
 	public function getProperties() {
 		if (!structKeyExists(variables,"properties"))
