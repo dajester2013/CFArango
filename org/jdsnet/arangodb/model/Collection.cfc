@@ -32,10 +32,16 @@ component accessors=true output=false persistent=false {
 	property string Name;
 	property Database Database;
 	
+	/**
+	 * Creates a document interface.  May be an existing document or a new document - the latter not being created until the save() method is called on the returned Document.
+	 **/
 	public Document function newDocument(struct data={}) {
 		return new Document(data,this);
 	}
 	
+	/**
+	 * Creates a new document in the collection
+	 **/
 	public Document function save(required record) {
 		if (isInstanceOf(record,"Document")) {
 			record.save();
@@ -46,31 +52,51 @@ component accessors=true output=false persistent=false {
 		return record;
 	}
 	
+	/**
+	 * Load this collection into server memory
+	 **/
 	public struct function load() {
 		return openService("collection").put("#this.getName()#/load");
 	}
 	
+	/**
+	 * Unload this collection from server memory
+	 **/
 	public struct function unload() {
 		return openService("collection").put("#this.getName()#/unload");
 	}
 	
+	/**
+	 * Get a document by id/key
+	 **/
 	public Document function getDocumentByKey(required string key) {
-		return this.createDocument(openService("document").get("#this.getName()#/#key#"));
+		return this.createDocument(openService("document").get("#this.getName()#/#listRest(key,"/")#"));
 	}
 	
+	/**
+	 * Delete all documents
+	 **/
 	public function truncate() {
 		return openService("collection").put("#this.getName()#/truncate");
 	}
 	
+	/**
+	 * Destroys this collection
+	 **/
 	public struct function drop() {
 		return this.getDatabase().dropCollection(this.getName());
 	}
 	
+	/**
+	 * Rotate the journal for this collection.  Flushes deleted documents.
+	 **/
 	public boolean function rotate() {
 		return openService("collection").put("#this.getName()#/rotate").result;
 	}
 	
-	
+	/**
+	 * Search for documents that match {example}
+	 **/
 	public array function queryByExample(required struct example, any limit=0, numeric skip=0, boolean raw=false) {
 		var response = {};
 		if (limit === true) {
@@ -96,6 +122,9 @@ component accessors=true output=false persistent=false {
 		return response.result;
 	}
 	
+	/**
+	 * Perform a full text search
+	 **/
 	public array function fullTextSearch(required string attribute, required string searchText, boolean raw=false) {
 		var response = openService("simple/by-example").put({
 			"collection":this.getName()
@@ -103,9 +132,18 @@ component accessors=true output=false persistent=false {
 			,"query":arguments.searchText
 		});
 		
+		if (!raw) {
+			for (var i=1; i<=arraylen(response.result); i++) {
+				response.result[i] = this.newDocument(response.result[i]);
+			}
+		}
+		
 		return response.result;
 	}
 	
+	/**
+	 * Adds/updates keys set in {update} to all documents matched by {example}, up to {limit}
+	 **/
 	public struct function updateMatching(required struct example, required struct update, any limit=0, boolean keepNull=true, boolean waitForSync) {
 		var srequest = {
 			 "example"		: arguments.example
@@ -122,7 +160,9 @@ component accessors=true output=false persistent=false {
 		return response;
 	}
 	
-	
+	/**
+	 * Replaces all keys in documents matched by {example} with the keys set in {update}, up to {limit}
+	 **/
 	public struct function replaceMatching(required struct example, required struct update, any limit=0, boolean waitForSync) {
 		var srequest = {
 			 "example"		: arguments.example
@@ -138,6 +178,9 @@ component accessors=true output=false persistent=false {
 		return response;
 	}
 	
+	/**
+	 * Deletes all documents matching the {example}, up to {limit}
+	 **/
 	public struct function deleteMatching(required struct example, any limit=0, boolean waitForSync) {
 		var srequest = {
 			 "example"		: arguments.example
@@ -152,22 +195,33 @@ component accessors=true output=false persistent=false {
 		return response;
 	}
 	
+	/**
+	 * Create an index on this collection
+	 **/
 	public struct function createIndex(required struct indexParams) {
 		return openService("index").post("?collection=#this.getName#",indexParams);
 	}
 	
+	/**
+	 * Drops an index - enforces this collection as the owner of the index.
+	 **/
 	public struct function dropIndex(required string indexId) {
 		return openService("index").delete(this.getName() & "/" & listRest(indexId,"/"));
 	}
 	
+	/**
+	 * Get properties about this Collection
+	 **/
 	public function getProperties() {
 		if (!structKeyExists(variables,"properties"))
 			variables.properties = openService("collection").get("#this.getName()#/properties");
 		
 		return variables.properties;
 	}
+	
+	// disable setter
 	private function setProperties() {}
-
+	// to reduce typing...
 	private function openService(required string svc) {
 		return this.getDatabase().getConnection().openService(svc,this.getDatabase().getName());
 	}
