@@ -76,6 +76,14 @@ component accessors=true output=false persistent=false {
 		return q;
 	}
 	
+	public array function toArray() {
+		var res = [];
+		while(this.hasNext()) {
+			arrayappend(res,this.nextBatch(),true);
+		}
+		return res;
+	}
+	
 	/**
 	 * Iterate over all documents, calling @callable for each document.
 	 * @callable A function, closure, or object that implements call()
@@ -119,6 +127,18 @@ component accessors=true output=false persistent=false {
 		else if (curBatch.curIdx == curBatch.rCount)
 			readNextBatch();
 		return curBatch.result[++curBatch.curIdx];
+	}
+	
+	/**
+	 * Returns the next available resultset.
+	 */
+	public any function nextBatch() {
+		if (eof)
+			throw("End of resultset has been reached");
+		else if (curBatch.curIdx == curBatch.rCount)
+			readNextBatch();
+		curBatch.curIdx = curBatch.result.length;
+		return curBatch.result;
 	}
 	
 	
