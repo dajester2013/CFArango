@@ -97,20 +97,23 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Search for documents that match {example}
 	 **/
-	public array function queryByExample(required struct example, any limit=0, numeric skip=0, boolean raw=false) {
+	public array function queryByExample(required struct example, any limit, numeric skip=0, boolean raw=false) {
 		var response = {};
-		if (limit === true) {
+		
+		if (!isNull(limit) && isBoolean(limit) && limit == true) {
 			response = openService("simple/first-example").put({
 				 "example"		: arguments.example
 				,"collection"	: this.getName()
 			});
 		} else {
-			response = openService("simple/by-example").put({
+			var sreq = {
 				 "example"		: arguments.example
 				,"collection"	: this.getName()
-				,"limit"		: arguments.limit
 				,"skip"			: arguments.skip
-			});
+			};
+			if (!isNull(arguments.limit) && isNumeric(arguments.limit))
+				sreq["limit"] = arguments.limit;
+			response = openService("simple/by-example").put(sreq);
 		}
 		
 		if (!raw) {
@@ -126,7 +129,7 @@ component accessors=true output=false persistent=false {
 	 * Perform a full text search
 	 **/
 	public array function fullTextSearch(required string attribute, required string searchText, boolean raw=false) {
-		var response = openService("simple/by-example").put({
+		var response = openService("simple/fulltext").put({
 			"collection":this.getName()
 			,"attribute":arguments.attribute
 			,"query":arguments.searchText
@@ -144,14 +147,16 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Adds/updates keys set in {update} to all documents matched by {example}, up to {limit}
 	 **/
-	public struct function updateMatching(required struct example, required struct update, any limit=0, boolean keepNull=true, boolean waitForSync) {
+	public struct function updateMatching(required struct example, required struct update, numeric limit, boolean keepNull=true, boolean waitForSync) {
 		var srequest = {
 			 "example"		: arguments.example
 			,"collection"	: this.getName()
 			,"newValue"		: update
-			,"limit"		: arguments.limit
 			,"keepNull"		: arguments.keepNull
 		};
+		if (!isNull(arguments.limit))
+			srequest["limit"] = arguments.limit;
+		
 		if (!isNull(waitForSync))
 			srequest["waitForSync"] = arguments.waitForSync;
 		
@@ -163,13 +168,14 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Replaces all keys in documents matched by {example} with the keys set in {update}, up to {limit}
 	 **/
-	public struct function replaceMatching(required struct example, required struct update, any limit=0, boolean waitForSync) {
+	public struct function replaceMatching(required struct example, required struct update, numeric limit, boolean waitForSync) {
 		var srequest = {
 			 "example"		: arguments.example
 			,"collection"	: this.getName()
 			,"newValue"		: update
-			,"limit"		: arguments.limit
 		};
+		if (!isNull(arguments.limit))
+			srequest["limit"] = arguments.limit;
 		if (!isNull(waitForSync))
 			srequest["waitForSync"] = arguments.waitForSync;
 		
@@ -181,12 +187,13 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Deletes all documents matching the {example}, up to {limit}
 	 **/
-	public struct function deleteMatching(required struct example, any limit=0, boolean waitForSync) {
+	public struct function deleteMatching(required struct example, numeric limit, boolean waitForSync) {
 		var srequest = {
 			 "example"		: arguments.example
 			,"collection"	: this.getName()
-			,"limit"		: arguments.limit
 		};
+		if (!isNull(arguments.limit))
+			srequest["limit"] = arguments.limit;
 		if (!isNull(waitForSync))
 			srequest["waitForSync"] = arguments.waitForSync;
 		
