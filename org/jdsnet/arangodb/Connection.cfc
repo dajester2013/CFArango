@@ -51,7 +51,7 @@ component accessors=true output=false persistent=false {
 	public array function getUserDatabases() {
 		return this.openService("database/user","_system").get().result;
 	}
-	
+
 	public model.Database function openDatabase(required string name) {
 		return new model.Database(name=name, connection=this);
 	}

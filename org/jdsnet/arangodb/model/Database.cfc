@@ -112,8 +112,29 @@ component accessors=true output=false persistent=false {
 			}
 		};
 		structAppend(collection,options);
-		options["isSystem"]=false;
-		options["type"]=2;
+		collection["isSystem"]=false;
+		collection["type"]=2;
+		var result = cService.post(collection);
+		result.database=this;
+		return new Collection(argumentCollection=result);
+	}
+	
+	public Collection function createEdgeCollection(required string name, struct options) {
+		if (isNull(options)) options={};
+		var collection = {
+			 "name"			= arguments.name
+			,"waitForSync"	= false
+			,"doCompact"	= true
+		//	,"journalSize"	= << default is configured in arangod.conf >>
+			,"isVolatile"	= false
+			,"keyOptions"	= {
+				 "type"				= "traditional"
+				,"allowUserKeys"	= true
+			}
+		};
+		structAppend(collection,options);
+		collection["isSystem"]=false;
+		collection["type"]=3;
 		var result = cService.post(collection);
 		result.database=this;
 		return new Collection(argumentCollection=result);

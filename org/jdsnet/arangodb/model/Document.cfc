@@ -134,6 +134,15 @@ component accessors=true output=false persistent=false {
 		structclear(variables);
 		return res;
 	}
+
+	public Edge function createEdge(required any collection, struct edgeData={}) {
+		if (!isObject(arguments.collection))
+			arguments.collection = thi.getCollection().getDatabase().getCollection(arguments.collection);
+
+		var edge = new Edge(arguments.edgeData,arguments.collection);
+		edge.setInitiator(this);
+		return edge;
+	}
 	
 	public function setId() {}
 	public function getCurrentDocument() {return this.get();}

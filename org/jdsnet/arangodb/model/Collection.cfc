@@ -69,8 +69,8 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Get a document by id/key
 	 **/
-	public Document function getDocumentByKey(required string key) {
-		return this.createDocument(openService("document").get("#this.getName()#/#listRest(key,"/")#"));
+	public Document function getDocument(required string key) {
+		return this.createDocument(openService("document").get("#this.getName()#/#key.replaceAll("[^\/]+\/","")#"));
 	}
 	
 	/**
@@ -97,32 +97,36 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Search for documents that match {example}
 	 **/
-	public array function queryByExample(required struct example, any limit, numeric skip=0, boolean raw=false) {
+	public any function queryByExample(required struct example, any limit, numeric skip=0, boolean raw=false) {
 		var response = {};
 		
-		if (!isNull(limit) && isBoolean(limit) && limit == true) {
+		if (!isNull(limit) && limit == "first") {
 			response = openService("simple/first-example").put({
-				 "example"		: arguments.example
-				,"collection"	: this.getName()
+				 "example"		= arguments.example
+				,"collection"	= this.getName()
 			});
+
+			return raw ? response.document : this.newDocument(response.document);
 		} else {
 			var sreq = {
-				 "example"		: arguments.example
-				,"collection"	: this.getName()
-				,"skip"			: arguments.skip
+				 "example"		= arguments.example
+				,"collection"	= this.getName()
+				,"skip"			= arguments.skip
 			};
+			
 			if (!isNull(arguments.limit) && isNumeric(arguments.limit))
 				sreq["limit"] = arguments.limit;
+			
 			response = openService("simple/by-example").put(sreq);
-		}
-		
-		if (!raw) {
-			for (var i=1; i<=arraylen(response.result); i++) {
-				response.result[i] = this.newDocument(response.result[i]);
+			
+			if (!raw) {
+				for (var i=1; i<=arraylen(response.result); i++) {
+					response.result[i] = this.newDocument(response.result[i]);
+				}
 			}
+			
+			return response.result;
 		}
-		
-		return response.result;
 	}
 	
 	/**
@@ -130,9 +134,9 @@ component accessors=true output=false persistent=false {
 	 **/
 	public array function fullTextSearch(required string attribute, required string searchText, boolean raw=false) {
 		var response = openService("simple/fulltext").put({
-			"collection":this.getName()
-			,"attribute":arguments.attribute
-			,"query":arguments.searchText
+			 "collection"	= this.getName()
+			,"attribute"	= arguments.attribute
+			,"query"		= arguments.searchText
 		});
 		
 		if (!raw) {
@@ -147,12 +151,12 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Adds/updates keys set in {update} to all documents matched by {example}, up to {limit}
 	 **/
-	public struct function updateMatching(required struct example, required struct update, numeric limit, boolean keepNull=true, boolean waitForSync) {
+	public struct function updateByExample(required struct example, required struct update, numeric limit, boolean keepNull=true, boolean waitForSync) {
 		var srequest = {
-			 "example"		: arguments.example
-			,"collection"	: this.getName()
-			,"newValue"		: update
-			,"keepNull"		: arguments.keepNull
+			 "example"		= arguments.example
+			,"collection"	= this.getName()
+			,"newValue"		= update
+			,"keepNull"		= arguments.keepNull
 		};
 		if (!isNull(arguments.limit))
 			srequest["limit"] = arguments.limit;
@@ -168,11 +172,11 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Replaces all keys in documents matched by {example} with the keys set in {update}, up to {limit}
 	 **/
-	public struct function replaceMatching(required struct example, required struct update, numeric limit, boolean waitForSync) {
+	public struct function replaceByExample(required struct example, required struct update, numeric limit, boolean waitForSync) {
 		var srequest = {
-			 "example"		: arguments.example
-			,"collection"	: this.getName()
-			,"newValue"		: update
+			 "example"		= arguments.example
+			,"collection"	= this.getName()
+			,"newValue"		= update
 		};
 		if (!isNull(arguments.limit))
 			srequest["limit"] = arguments.limit;
@@ -187,10 +191,10 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Deletes all documents matching the {example}, up to {limit}
 	 **/
-	public struct function deleteMatching(required struct example, numeric limit, boolean waitForSync) {
+	public struct function deleteByExample(required struct example, numeric limit, boolean waitForSync) {
 		var srequest = {
-			 "example"		: arguments.example
-			,"collection"	: this.getName()
+			 "example"		= arguments.example
+			,"collection"	= this.getName()
 		};
 		if (!isNull(arguments.limit))
 			srequest["limit"] = arguments.limit;
@@ -213,7 +217,7 @@ component accessors=true output=false persistent=false {
 	 * Drops an index - enforces this collection as the owner of the index.
 	 **/
 	public struct function dropIndex(required string indexId) {
-		return openService("index").delete(this.getName() & "/" & listRest(indexId,"/"));
+		return openService("index").delete(this.getName() & "/" & indexId.replaceAll("^[^\/]+\/",""));
 	}
 	
 	/**
