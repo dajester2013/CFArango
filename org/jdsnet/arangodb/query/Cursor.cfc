@@ -137,7 +137,7 @@ component accessors=true output=false persistent=false {
 			throw("End of resultset has been reached");
 		else if (curBatch.curIdx == curBatch.rCount)
 			readNextBatch();
-		curBatch.curIdx = curBatch.result.length;
+		curBatch.curIdx = arraylen(curBatch.result);
 		return curBatch.result;
 	}
 	
