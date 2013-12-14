@@ -75,7 +75,7 @@ component accessors=true output=false persistent=false {
 		if (key != '_id')
 			variables.currentDocument[key] = value;
 		
-		variables.dirty = !structKeyExists(variables.originalDocument,key) || variables.currentDocument[key] != variables.originalDocument[key];
+		variables.dirty = !structKeyExists(variables.originalDocument,key) || (!isObject(variables.currentDocument[key]) && variables.currentDocument[key] != variables.originalDocument[key]);
 		
 		return this;
 	}
@@ -137,7 +137,7 @@ component accessors=true output=false persistent=false {
 
 	public Edge function createEdge(required any collection, struct edgeData={}) {
 		if (!isObject(arguments.collection))
-			arguments.collection = thi.getCollection().getDatabase().getCollection(arguments.collection);
+			arguments.collection = this.getCollection().getDatabase().getCollection(arguments.collection);
 
 		var edge = new Edge(arguments.edgeData,arguments.collection);
 		edge.setInitiator(this);

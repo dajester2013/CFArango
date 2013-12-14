@@ -70,7 +70,7 @@ component accessors=true output=false persistent=false {
 	 * Get a document by id/key
 	 **/
 	public Document function getDocument(required string key) {
-		return this.createDocument(openService("document").get("#this.getName()#/#key.replaceAll("[^\/]+\/","")#"));
+		return this.newDocument(openService("document").get("#this.getName()#/#key.replaceAll("[^\/]+\/","")#"));
 	}
 	
 	/**

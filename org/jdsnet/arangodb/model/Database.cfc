@@ -150,7 +150,7 @@ component accessors=true output=false persistent=false {
 	
 	public Document function getDocumentById(required string id) {
 		var parts = id.split("/");
-		return this.getCollection(parts[1]).getDocumentByKey(parts[2]);
+		return this.getCollection(parts[1]).getDocument(parts[2]);
 	}
 	
 }
