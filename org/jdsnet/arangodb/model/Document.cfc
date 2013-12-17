@@ -130,7 +130,7 @@ component accessors=true output=false persistent=false {
 	
 	
 	public boolean function delete() {
-		var res = !variables.docService.delete(this.getId()).error;
+		var res = !openService("document").delete(this.getId()).error;
 		structclear(variables);
 		return res;
 	}
