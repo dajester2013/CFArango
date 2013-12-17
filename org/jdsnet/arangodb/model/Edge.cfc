@@ -59,10 +59,11 @@ component accessors=true output=false persistent=false extends="Document" {
 		this.put("_to",_to);
 		this.put("_from",_from);
 
+		// cannot update the document - can only 
 		if (!isNull(this.getId()))
-			var res = openService("document").put(this.getId(),variables.currentDocument);
-		else
-			var res = openService("edge").post(variables.COL_RES&"&from=#_from#&to=#_to#",variables.currentDocument);
+			openService("document").delete(this.getId());
+		
+		var res = openService("edge").post(variables.COL_RES&"&from=#_from#&to=#_to#",variables.currentDocument);
 		
 		structDelete(res,"error");
 		structappend(variables.currentDocument,res);
@@ -78,12 +79,15 @@ component accessors=true output=false persistent=false extends="Document" {
 		dirty=false;
 		return this;
 	}
-
+	
 	public function to(_to) {
-		return this.set_to(_to);
+		return variables._to=_to;
 	}
 	public function from(_from) {
-		return this.set_from(_from);
+		return variables._from=_from;
 	}
+
+	private function set_to() {}
+	private function set_from() {}
 
 }
