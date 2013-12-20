@@ -20,6 +20,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import org.jdsnet.arangodb.query.Cursor;
+
 /**
  * Collection
  * 
@@ -36,7 +38,12 @@ component accessors=true output=false persistent=false {
 	 * Creates a document interface.  May be an existing document or a new document - the latter not being created until the save() method is called on the returned Document.
 	 **/
 	public Document function newDocument(struct data={}) {
-		return new Document(data,this);
+		var type = this.getProperties().type;
+		if (type == 2) {
+			return new Document(data,this);
+		} else if (type == 3) {
+			return new Edge(data,this);
+		}
 	}
 	
 	/**
@@ -125,7 +132,7 @@ component accessors=true output=false persistent=false {
 				}
 			}
 			
-			return response.result;
+			return new Cursor(response);
 		}
 	}
 	
@@ -144,8 +151,8 @@ component accessors=true output=false persistent=false {
 				response.result[i] = this.newDocument(response.result[i]);
 			}
 		}
-		
-		return response.result;
+
+		return new Cursor(response);
 	}
 	
 	/**

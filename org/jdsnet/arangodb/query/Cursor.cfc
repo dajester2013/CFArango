@@ -20,6 +20,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import org.jdsnet.arangodb.model.Database;
+
 /**
  * Cursor - interface to read data from a statement's execution to a result set
  * 
@@ -28,52 +30,73 @@
  **/
 component accessors=true output=false persistent=false {
 	
-	property string Id;
+	property string			Id;
+	property AQLStatement	Statement;
+	property Struct			Params;
+	property Database		Database;
+	property numeric		CurrentCount;
+	property numeric		TotalCount;
 	
 	variables.eof=false;
 	variables.svc = "";
-	variables.curBatch = {};
-	
+
 	/**
 	 * Constructor
-	 * @connection Connection.
-	 * @statement The statement that initiated this cursor
-	 * @params The params bound to the statement
+	 * 
 	 */
-	package function init(org.jdsnet.arangodb.model.Database db, AQLStatement statement, struct params) {
-		svc = db.getConnection().openService("cursor",db.getName());
-		
-		readInitial(statement,params);
+	public function init(struct batch) {
+		if (isStruct(batch)) {
+			variables._currentBatch			= batch;
+			variables._currentBatch.curIdx	= 0;
+		} else
+			for (var k in arguments) if (!isNull(arguments[k]))
+				variables[k] = arguments[k];
 		
 		return this;
 	}
 	
+	public Cursor function setStatement(required AQLStatement Statement) {
+		variables.Statement = arguments.Statement;
+		variables.Database = arguments.Statement.getDatabase();
+		return this;
+	}
+
+	public numeric function getCurrentCount() {
+		return variables._currentBatch.count;
+	}
+
 	/**
 	 * Reads the data from the statement into a query object.
+	 * @populateQuery An optional query object to populate.
 	 */
-	public query function toQuery() {
-		var q = "";
+	public query function toQuery(query populateQuery) {
 		var cols={};
 		
 		while(this.hasNext()) {
 			var doc = this.next();
+			
 			if (!IsStruct(doc))
 				throw("Cannot convert to query - expected collection of objects");
-			if (!isQuery(q)) {
-				q = querynew(structkeylist(doc));
+			else if (isInstanceOf(doc,"Document"))
+				doc = doc.get();
+
+			if (isNull(populateQuery)) {
+				populateQuery = querynew(structkeylist(doc));
 				for (k in doc) cols[k]=true;
 			}
-			queryAddRow(q);
+
+			queryAddRow(populateQuery);
+			
 			for (var k in doc) {
 				if(!structKeyExists(cols,k)) {
 					cols[k]=true;
-					queryaddcolumn(q,k);
+					queryaddcolumn(populateQuery,k);
 				}
-				querysetcell(q,k,doc[k],q.recordcount);
+				querysetcell(populateQuery,k,doc[k],populateQuery.recordcount);
 			}
 		}
 		
-		return q;
+		return populateQuery;
 	}
 	
 	public array function toArray() {
@@ -88,9 +111,10 @@ component accessors=true output=false persistent=false {
 	 * Iterate over all documents, calling @callable for each document.
 	 * @callable A function, closure, or object that implements call()
 	 */
-	public function forEach(required callable) {
+	public function each(required callable) {
+		var idx=0;
 		while(this.hasNext()) {
-			if (applyToCallback(callable,this.next()) === false) {
+			if (applyToCallback(callable,[this.next(),++idx]) === false) {
 				return false;
 			}
 		}
@@ -100,13 +124,12 @@ component accessors=true output=false persistent=false {
 	 * Iterate over each batch, calling @callable for the batch.
 	 * @callable A function, closure, or object that implements call()
 	 */
-	public function forEachBatch(required callable) {
-		if (applyToCallback(callable,curBatch) === false) {
-			return false;
-		}
-		if (curBatch.hasMore) {
-			readNextBatch();
-			forEachBatch(callable);
+	public function eachBatch(required callable) {
+		var idx=0;
+		while(this.hasNext()) {
+			if (applyToCallback(callable,[this.nextBatch(),++idx]) === false) {
+				return false;
+			}
 		}
 	}
 	
@@ -114,7 +137,11 @@ component accessors=true output=false persistent=false {
 	 * Returns whether or not there is another record available.
 	 */
 	public boolean function hasNext() {
-		eof = !eof && !(curBatch.curIdx < curBatch.rCount || curBatch.hasMore);
+		var curBatch = this.getCurrentBatch();
+		// writeOutput('hsnxt :: #curBatch.curIdx# < #curBatch.count#? #curBatch.curIdx < curBatch.count# #curBatch.hasMore# <br />');
+		// writeDump(curbatch)
+		eof = eof || !(curBatch.curIdx < curBatch.count || curBatch.hasMore);
+		// writeOutput(eof);
 		return !eof;
 	}
 	
@@ -124,8 +151,13 @@ component accessors=true output=false persistent=false {
 	public any function next() {
 		if (eof)
 			throw("End of resultset has been reached");
-		else if (curBatch.curIdx == curBatch.rCount)
+
+		var curBatch = this.getCurrentBatch();
+		// writeDump(var=curBatch);
+		if (curBatch.curIdx == curBatch.count){
 			readNextBatch();
+			curBatch = this.getCurrentBatch();
+		}
 		return curBatch.result[++curBatch.curIdx];
 	}
 	
@@ -135,46 +167,85 @@ component accessors=true output=false persistent=false {
 	public any function nextBatch() {
 		if (eof)
 			throw("End of resultset has been reached");
-		else if (curBatch.curIdx == curBatch.rCount)
+
+		var curBatch = this.getCurrentBatch();
+		if (curBatch.curIdx == curBatch.count) {
 			readNextBatch();
-		curBatch.curIdx = arraylen(curBatch.result);
+			curBatch = this.getCurrentBatch();
+		}
+			// writeOutput('nb<br />');
+			// writedump(curBatch.result)
+		curBatch.curIdx = curBatch.count;
 		return curBatch.result;
 	}
 	
-	
-	
-	private function applyToCallback(required cb, required appliedValue) {
-		if (IsCustomFunction(cb) || structKeyExists(getMetaData(cb),"closure"))
-			cb(appliedValue);
-		if (IsObject(cb) && StructKeyExists(cb,"call") && IsCustomFunction(cb.call))
-			cb.call(appliedValue);
+
+	public struct function getCurrentBatch() {
+		if (isNull(variables._currentBatch)) {
+			readInitial();
+		}
+		return variables._currentBatch;
 	}
 	
-	private function readInitial(AQLStatement stmt, struct params) {
-		curBatch = svc.post({
-			 "query"		= stmt.getStatement()
-			,"batchSize"	= stmt.getBatchSize()
-			,"bindVars"		= params
-			,"count"		= stmt.getShowCount()
+	
+	private function applyToCallback(required cb, required args) {
+		var _args = args;
+		if (isArray(args)) {
+			_args=[];
+			for (var i=1; i<=arraylen(args); i++) _args[i]=args[i];
+		} 
+
+		if (IsCustomFunction(cb) || structKeyExists(getMetaData(cb),"closure"))
+			cb(argumentCollection=_args);
+		if (IsObject(cb) && StructKeyExists(cb,"call") && IsCustomFunction(cb.call))
+			cb.call(argumentCollection=_args);
+	}
+	
+
+
+	private function setTotalCount(required numeric count) {
+		variables.totalCount = count;
+	}
+
+	private function getService() {
+		if (isNull(variables._cursorService))
+			variables._cursorService = this.getDatabase().getConnection().openService("cursor",this.getDatabase().getName());
+		return variables._cursorService;
+	}
+
+	private function readInitial() {
+		// writeOutput('ri<br />');
+		variables._currentBatch = getService().post({
+			 "query"		= this.getStatement().getStatement()
+			,"batchSize"	= this.getStatement().getBatchSize()
+			,"bindVars"		= this.getParams()
+			,"count"		= this.getStatement().getShowCount()
 			,"options"		= {
-				"fullCount"	= stmt.getShowFullCount()
+				"fullCount"	= this.getStatement().getShowFullCount()
 			}
 		});
-		curBatch.curIdx=0;
-		curBatch.rCount=arraylen(curBatch.result);
+		variables._currentBatch.curIdx=0;
 		
-		if (structKeyExists(curBatch,"id"))
-			this.setId(curBatch.id);
+		if (structKeyExists(variables._currentBatch,"id"))
+			this.setId(variables._currentBatch.id);
+
+		if (	structKeyExists(variables._currentBatch,"extra")
+			&&	structKeyExists(variables._currentBatch.extra,"fullCount"))
+			setTotalCount(variables._currentBatch.extra.fullCount);
+		else
+			setTotalCount(variables._currentBatch.count);
 	}
 	
 	private function readNextBatch() {
 		if (eof)
 			throw("End of resultset has been reached");
+		// writeOutput('rnb<br />');
 		
-		curBatch = svc.put(curBatch.id);
-		curBatch.curIdx=0;
-		curBatch.rCount=arraylen(curBatch.result);
-		eof=!curBatch.hasMore;
+		// writedump(variables._currentBatch)
+		variables._currentBatch			= getService().put(variables._currentBatch.id);
+		variables._currentBatch.curIdx	= 0;
+		variables.eof					= !variables._currentBatch.hasMore;
+		// writeOutput(eof);
 	}
 	
 }

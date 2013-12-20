@@ -31,7 +31,6 @@ component accessors=true output=false persistent=false {
 	property string								Statement;
 	property org.jdsnet.arangodb.model.Database	Database;
 	property numeric							BatchSize;
-	property boolean							ShowCount;
 	property boolean							ShowFullCount;
 	
 	variables.boundParams = {};
@@ -44,7 +43,7 @@ component accessors=true output=false persistent=false {
 	 * @boundParams A struct of named params to bind to the execution
 	 */
 	public Cursor function execute(struct boundParams=variables.boundParams) {
-		return new Cursor(this.getDatabase(),this, arguments.boundParams);
+		return new Cursor(Statement=this, Params=arguments.boundParams);
 	}
 	
 	/**
@@ -55,6 +54,20 @@ component accessors=true output=false persistent=false {
 	public AQLStatement function bind(required string name, any value) {
 		boundParams[name] = value;
 		return this;
+	}
+
+	/**
+	 * Execute and return an array immediately from this statement
+	 **/
+	public array function toArray() {
+		return this.execute().toArray();
+	}
+
+	/**
+	 * Execute and return a query immediately from this statement
+	 **/
+	public query function toQuery() {
+		return this.execute().toQuery();
 	}
 	
 }
