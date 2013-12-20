@@ -70,4 +70,18 @@ component accessors=true output=false persistent=false {
 		return this.execute().toQuery();
 	}
 	
+	/**
+	 * Execute and return an array immediately from this statement
+	 **/
+	public array function each(cb) {
+		return this.execute().each(cb);
+	}
+
+	/**
+	 * Execute and return a query immediately from this statement
+	 **/
+	public query function eachBatch(cb) {
+		return this.execute().eachBatch(cb);
+	}
+	
 }
