@@ -46,33 +46,7 @@ component accessors=true output=false persistent=false implements=Credentials {
 		requestObject.setUsername(variables.username);
 		requestObject.setPassword(variables.password);
 	}
-
-	/**
-	 * Username setter
-	 **/
-	public void function setUsername(required string username) {
-		variables.username = arguments.username;
-	}
-
-	/**
-	 * Password setter
-	 **/
-	public void function setPassword(required string password) {
-		variables.password = arguments.password;
-	}
-
-	/**
-	 * Username getter
-	 **/
-	public string function getUsername() {
-		return variables.username;
-	}
-
-	/**
-	 * Password getter
-	 **/
-	public string function getPassword() {
-		return variables.password;
-	}
+	
+	private function getPassword() {}
 
 }
