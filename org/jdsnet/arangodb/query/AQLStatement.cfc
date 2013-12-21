@@ -31,12 +31,13 @@ component accessors=true output=false persistent=false {
 	property string								Statement;
 	property org.jdsnet.arangodb.model.Database	Database;
 	property numeric							BatchSize;
+	property boolean							ShowCount;
 	property boolean							ShowFullCount;
 	
-	variables.boundParams = {};
-	variables.batchSize = 0;
-	variables.showCount=false;
-	variables.showFullCount=false;
+	variables.boundParams	= {};
+	variables.batchSize		= 0;
+	variables.showCount		= true;
+	variables.showFullCount	= false;
 	
 	/**
 	 * Execute the statement.

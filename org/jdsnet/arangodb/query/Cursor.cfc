@@ -35,7 +35,7 @@ component accessors=true output=false persistent=false {
 	property Struct			Params;
 	property Database		Database;
 	property numeric		CurrentCount;
-	property numeric		TotalCount;
+	property numeric		FullCount;
 	
 	variables.eof=false;
 	variables.svc = "";
@@ -48,10 +48,17 @@ component accessors=true output=false persistent=false {
 		if (isStruct(batch)) {
 			variables._currentBatch			= batch;
 			variables._currentBatch.curIdx	= 0;
-		} else
-			for (var k in arguments) if (!isNull(arguments[k]))
-				variables[k] = arguments[k];
-		
+		} else {
+			for (var k in arguments) if (!isNull(arguments[k])) {
+				if (structKeyExists(this,"set#k#")) {
+					this._setter = this["set#k#"];
+					this._setter(arguments[k]);
+					structDelete(this,"_setter");
+				} else {
+					variables[k] = arguments[k];
+				}
+			}
+		}
 		return this;
 	}
 	
@@ -138,10 +145,7 @@ component accessors=true output=false persistent=false {
 	 */
 	public boolean function hasNext() {
 		var curBatch = this.getCurrentBatch();
-		// writeOutput('hsnxt :: #curBatch.curIdx# < #curBatch.count#? #curBatch.curIdx < curBatch.count# #curBatch.hasMore# <br />');
-		// writeDump(curbatch)
 		eof = eof || !(curBatch.curIdx < curBatch.count || curBatch.hasMore);
-		// writeOutput(eof);
 		return !eof;
 	}
 	
@@ -153,7 +157,6 @@ component accessors=true output=false persistent=false {
 			throw("End of resultset has been reached");
 
 		var curBatch = this.getCurrentBatch();
-		// writeDump(var=curBatch);
 		if (curBatch.curIdx == curBatch.count){
 			readNextBatch();
 			curBatch = this.getCurrentBatch();
@@ -173,8 +176,6 @@ component accessors=true output=false persistent=false {
 			readNextBatch();
 			curBatch = this.getCurrentBatch();
 		}
-			// writeOutput('nb<br />');
-			// writedump(curBatch.result)
 		curBatch.curIdx = curBatch.count;
 		return curBatch.result;
 	}
@@ -203,8 +204,8 @@ component accessors=true output=false persistent=false {
 	
 
 
-	private function setTotalCount(required numeric count) {
-		variables.totalCount = count;
+	private function setFullCount(required numeric count) {
+		variables.FullCount = count;
 	}
 
 	private function getService() {
@@ -214,7 +215,6 @@ component accessors=true output=false persistent=false {
 	}
 
 	private function readInitial() {
-		// writeOutput('ri<br />');
 		variables._currentBatch = getService().post({
 			 "query"		= this.getStatement().getStatement()
 			,"batchSize"	= this.getStatement().getBatchSize()
@@ -231,21 +231,18 @@ component accessors=true output=false persistent=false {
 
 		if (	structKeyExists(variables._currentBatch,"extra")
 			&&	structKeyExists(variables._currentBatch.extra,"fullCount"))
-			setTotalCount(variables._currentBatch.extra.fullCount);
+			setFullCount(variables._currentBatch.extra.fullCount);
 		else
-			setTotalCount(variables._currentBatch.count);
+			setFullCount(variables._currentBatch.count);
 	}
 	
 	private function readNextBatch() {
 		if (eof)
 			throw("End of resultset has been reached");
-		// writeOutput('rnb<br />');
 		
-		// writedump(variables._currentBatch)
 		variables._currentBatch			= getService().put(variables._currentBatch.id);
 		variables._currentBatch.curIdx	= 0;
 		variables.eof					= !variables._currentBatch.hasMore;
-		// writeOutput(eof);
 	}
 	
 }
