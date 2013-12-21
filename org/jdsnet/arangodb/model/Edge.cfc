@@ -42,14 +42,10 @@ component accessors=true output=false persistent=false extends="Document" {
 		if (isNull(this.get_to()) && isNull(this.get_from()))
 			throw(message="Connections not defined - must call both setTo() and setFrom().");
 		else if (isNull(this.get_to()) && !isNull(this.get_from()) && !isNull(variables.initiator))
-			this.set_to(variables.initiator);
+			this.to(variables.initiator);
 		else if (!isNull(this.get_to()) && isNull(this.get_from()) && !isNull(variables.initiator))
-			this.set_from(variables.initiator);
-
-		var _to = this.get_to();
-		var _from = this.get_from();
-
-
+			this.from(variables.initiator);
+		
 		_to = isObject(_to) ? _to.getId() : _to;
 		_from = isObject(_from) ? _from.getId() : _from;
 
@@ -81,10 +77,12 @@ component accessors=true output=false persistent=false extends="Document" {
 	}
 	
 	public function to(_to) {
-		return variables._to=_to;
+		variables._to=_to;
+		return this;
 	}
 	public function from(_from) {
-		return variables._from=_from;
+		variables._from=_from;
+		return this;
 	}
 
 	private function set_to() {}
