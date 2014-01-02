@@ -45,7 +45,7 @@ component accessors=true output=false persistent=false {
 	 * 
 	 */
 	public function init(struct batch) {
-		if (isStruct(batch)) {
+		if (!isNull(batch) && isStruct(batch)) {
 			variables._currentBatch			= batch;
 			variables._currentBatch.curIdx	= 0;
 		} else {
