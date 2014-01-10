@@ -132,7 +132,9 @@ component accessors=true output=false persistent=false {
 				}
 			}
 			
-			return new Cursor(response);
+			var cursor = new Cursor(response);
+			cursor.setDatabase(this.getDatabase());
+			return cursor;
 		}
 	}
 	
@@ -152,7 +154,9 @@ component accessors=true output=false persistent=false {
 			}
 		}
 
-		return new Cursor(response);
+		var cursor = new Cursor(response);
+			cursor.setDatabase(this.getDatabase());
+			return cursor;
 	}
 	
 	/**
@@ -208,7 +212,7 @@ component accessors=true output=false persistent=false {
 		if (!isNull(waitForSync))
 			srequest["waitForSync"] = arguments.waitForSync;
 		
-		var response = openService("simple/replace-by-example").put(srequest);
+		var response = openService("simple/remove-by-example").put(srequest);
 		
 		return response;
 	}

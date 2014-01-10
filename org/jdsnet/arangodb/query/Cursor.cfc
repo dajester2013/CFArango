@@ -46,8 +46,12 @@ component accessors=true output=false persistent=false {
 	 */
 	public function init(struct batch) {
 		if (!isNull(batch) && isStruct(batch)) {
+			batch.batchSize					= arraylen(batch.result);
 			variables._currentBatch			= batch;
 			variables._currentBatch.curIdx	= 0;
+			if (!isNull(batch.id)) {
+				this.setId(batch.id);
+			}
 		} else {
 			for (var k in arguments) if (!isNull(arguments[k])) {
 				if (structKeyExists(this,"set#k#")) {
@@ -145,7 +149,7 @@ component accessors=true output=false persistent=false {
 	 */
 	public boolean function hasNext() {
 		var curBatch = this.getCurrentBatch();
-		eof = eof || !(curBatch.curIdx < curBatch.count || curBatch.hasMore);
+		eof = eof || !(curBatch.curIdx < curBatch.batchSize || curBatch.hasMore);
 		return !eof;
 	}
 	
@@ -157,10 +161,11 @@ component accessors=true output=false persistent=false {
 			throw("End of resultset has been reached");
 
 		var curBatch = this.getCurrentBatch();
-		if (curBatch.curIdx == curBatch.count){
+		if (curBatch.curIdx == curBatch.count || curBatch.curIdx == curBatch.batchSize){
 			readNextBatch();
 			curBatch = this.getCurrentBatch();
 		}
+		
 		return curBatch.result[++curBatch.curIdx];
 	}
 	
@@ -225,6 +230,7 @@ component accessors=true output=false persistent=false {
 			}
 		});
 		variables._currentBatch.curIdx=0;
+		variables._currentBatch.batchSize = arraylen(variables._currentBatch.result);
 		
 		if (structKeyExists(variables._currentBatch,"id"))
 			this.setId(variables._currentBatch.id);
@@ -239,10 +245,9 @@ component accessors=true output=false persistent=false {
 	private function readNextBatch() {
 		if (eof)
 			throw("End of resultset has been reached");
-		
-		variables._currentBatch			= getService().put(variables._currentBatch.id);
-		variables._currentBatch.curIdx	= 0;
-		variables.eof					= !variables._currentBatch.hasMore;
+		variables._currentBatch				= getService().put(variables._currentBatch.id);
+		variables._currentBatch.curIdx		= 0;
+		variables._currentBatch.batchSize	= arraylen(variables._currentBatch.result);
 	}
 	
 }
