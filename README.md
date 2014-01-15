@@ -40,6 +40,42 @@ doc2.save();
 doc1.createEdge("relation").to(doc2).save();	// creates an "outbound" relation from doc1 to doc2
 doc1.createEdge("relation").from(doc2).save();	// creates an "inbound" relation from doc2 to doc1
 
-relation.newDocument().to(doc1).from(doc2).save(); // same as first example of creating an edge.
+relation.newDocument().from(doc1).to(doc2).save(); // same as first example of creating an edge.
+
+// delete a document - note, any edges referencing this document are orphaned currently
+doc1.delete();
+
+// queries
+  // AQL
+  var stmt = database.prepareStatement("for document filter key == @key in collection return document")
+            .setBatchSize(100);
+  var cursor = stmt.execute({"key" : "value"});
+
+  // reading the result set
+    // option 1
+    var result = cursor.toArray();
+    // option 2
+    var result = cursor.toQuery();
+    // option 3
+    while (cursor.hasNext()) {
+        writedump(cursor.next());
+    }
+    // option 4
+    while (cursor.hasNextBatch()) {
+        writedump(cursor.nextBatch());
+    }
+    
+  // Read By Example
+  var cursor = collection.queryByExample({"key":"value"});
+  var cursor = collection.fullTextSearch("");
+  
+  // Update By Example
+  var result = collection.updateByExample(example={}, update={});
+  // Replace By Example
+  var result = collection.replaceByExample(example={}, update={});
+  
+  // Delete By Example
+  var result = collection.deleteByExample(example={});
+  
 </cfscript>
 ```
