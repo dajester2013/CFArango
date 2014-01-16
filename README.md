@@ -57,13 +57,13 @@ doc1.delete();
     // option 2
     var result = cursor.toQuery();
     // option 3
-    while (cursor.hasNext()) {
-        writedump(cursor.next());
+    while (cursor.hasNext()) {  // or hasNextBatch
+        writedump(cursor.next()); // or nextBatch
     }
     // option 4
-    while (cursor.hasNextBatch()) {
-        writedump(cursor.nextBatch());
-    }
+    cursor.each(function(doc) {  // or eachBatch
+        writedump(doc); // or batch
+    });
     
   // Read By Example
   var cursor = collection.queryByExample({"key":"value"});
