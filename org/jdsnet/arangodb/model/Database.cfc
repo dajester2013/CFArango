@@ -153,4 +153,16 @@ component accessors=true output=false persistent=false {
 		return this.getCollection(parts[1]).getDocument(parts[2]);
 	}
 	
+	public User function getUser(string name) {
+		var u = new User(name=arguments.name, db=this);
+		if (!u.getExists()) {
+			throw(type="MissingUserException",message="The requested user does not exist on this database.");
+		} else {
+			return u;
+		}
+	}
+	
+	public User function newUser() {
+		return new User(db=this);
+	}
 }
