@@ -16,11 +16,12 @@ NOTE: This project has only been tested on Railo 4.1 and 4.2.  No testing has be
     * Railo Component resource mapping:
         * Navigate to the administrator page (server or web depending on how wide you desire access)
         * Under **Archives & Resources > Component**, add a resouce:
-        **Name** = cfarango
-        **Resource** = /path/to/CFArango (*NOTE: do not add the /org to the resource path!*)
+            * **Name** = cfarango
+            * **Resource** = /path/to/CFArango (*NOTE: do not add the /org to the resource path!*)
 
     * ACF custom tag path
         * Add /path/to/CFArango to the custom tags path (not tested)
+
 Examples:
 =========
 
