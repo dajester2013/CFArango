@@ -48,8 +48,8 @@ component accessors=true output=false persistent=false {
 		);
 	}
 	
-	public array function getUserDatabases() {
-		return this.openService("database/user","_system").get().result;
+	public array function getUserDatabases(primaryDatabase="_system") {
+		return this.openService("database/user",primaryDatabase).get().result;
 	}
 
 	public model.Database function getDatabase(required string name) {
