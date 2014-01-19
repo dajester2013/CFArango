@@ -34,9 +34,13 @@ component accessors=true output=false persistent=false {
 	property Collection collection;
 	property struct originalDocument;
 	property struct currentDocument;
+	property string updateMode default="patch";
 	
-	variables.currentDocument={};
-	variables.dirty=true;
+	this.MODE_UPDATE = "patch";
+	this.MODE_REPLACE = "put";
+	
+	variables.currentDocument	= {};
+	variables.dirty				= true;
 	
 	public Document function init(struct document={}, Collection collection) {
 		if (!isNull(arguments.collection))
@@ -88,6 +92,16 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 	
+	public Document function clear(string key) {
+		if (!isNull(key)) {
+			structDelete(variables.currentDocument,key);
+		} else {
+			structClear(variables.currentDocument);
+		}
+		this.setUpdateMode(this.MODE_REPLACE);
+		return this;
+	}
+	
 	public any function get(string key="") {
 		var rv = variables.currentDocument;
 		
@@ -103,10 +117,10 @@ component accessors=true output=false persistent=false {
 		if (isNull(this.getCollection()))
 			throw("No collection specified.");
 		
-		if (!isNull(this.getId()))
-			var res = openService("document").put(this.getId(),variables.currentDocument);
-		else
+		if (isNull(this.getId()))
 			var res = openService("document").post(variables.COL_RES,variables.currentDocument)
+		else
+			var res = openService("document")[this.getUpdateMode()](this.getId(),variables.currentDocument);
 		
 		
 		structDelete(res,"error");
