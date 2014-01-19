@@ -47,6 +47,10 @@ component accessors=true output=false persistent=false implements=Credentials {
 		requestObject.setPassword(variables.password);
 	}
 	
-	private function getPassword() {}
+	package function getPassword() {
+		if (!isNull(variables.password)) {
+			return variables.password;
+		}
+	}
 
 }
