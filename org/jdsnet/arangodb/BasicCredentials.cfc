@@ -27,8 +27,11 @@
  * @date 12/1/13
  **/
 component accessors=true output=false persistent=false implements=Credentials {
-	property string username default="root";
-	property string password default="";
+	property string username;
+	property string password;
+	
+	this.setUsername("root");
+	this.setPassword("");
 	
 	/**
 	 * Constructor

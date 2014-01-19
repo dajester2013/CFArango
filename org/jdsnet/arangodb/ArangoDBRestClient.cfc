@@ -38,7 +38,7 @@ component accessors=true output=false persistent=false {
 		var svcRequest = new Http();
 		var svcUrl = this.getBaseUrl() & (len(resource) ? "/" & resource : ""); 
 		
-		svcRequest.setMethod(verb)
+		svcRequest.setMethod(verb);
 		
 		if (arrayFindNoCase(["POST","PUT","PATCH"],verb)) {
 			svcRequest.addParam(type="body",value=serializeJson(data));
