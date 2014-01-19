@@ -3,6 +3,23 @@ CFArango
 
 CFML client library for ArangoDB.
 
+Installation:
+=============
+
+NOTE: This project has only been tested on Railo 4.1 and 4.2.  No testing has been done on ACF, however it should still work.
+
+1. Clone the repository: 
+    <pre>git clone https://github.com/dajester2013/CFArango.git</pre>
+2. Add mapping to the code (not necessary if project is cloned into your project/webserver root.
+    * Railo/ACF Application.cfc mapping:
+    <pre>this.mappings["/org"] = [/path/to/CFArango]/org</pre>
+    * Railo Component resource mapping:
+        * Navigate to the administrator page (server or web depending on how wide you desire access)
+        * Under **Archives & Resources > Component**, add a resouce:
+        | **Name** | cfarango | |
+        | **Resource** | /path/to/CFArango | *note, do not add the /org to the resource path!* |
+    * ACF custom tag path
+        * Add /path/to/CFArango to the custom tags path (not tested)
 Examples:
 =========
 
