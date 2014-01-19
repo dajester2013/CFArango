@@ -28,10 +28,14 @@
  **/
 component accessors=true output=false persistent=false {
 
-	property string Protocol default="http";
-	property string Host default="localhost";
-	property string Port default=8529;
+	property string Protocol;
+	property string Host;
+	property string Port;
 	property Credentials Credentials;
+	
+	this.setProtocol("http");
+	this.setHost("localhost");
+	this.setPort(8529);
 	
 	variables.serviceCache = {};
 	
