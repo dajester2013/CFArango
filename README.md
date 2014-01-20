@@ -10,7 +10,7 @@ NOTE: This project has only been tested on Railo 4.1 and 4.2.  No testing has be
 
 1. Clone the repository: 
     <pre>git clone https://github.com/dajester2013/CFArango.git</pre>
-2. Add mapping to the code (not necessary if project is cloned into your project/webserver root.
+2. Add mapping to the code (not necessary if project is cloned into your project/webserver root).
     * Railo/ACF Application.cfc mapping:
     <pre>this.mappings["/org"] = [/path/to/CFArango]/org</pre>
     * Railo Component resource mapping:
