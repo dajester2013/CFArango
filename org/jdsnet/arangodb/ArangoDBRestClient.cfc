@@ -76,8 +76,9 @@ component accessors=true output=false persistent=false {
 	}
 	
 	
-	
-	
+	/**
+	 * GET request - read data from a service
+	 **/
 	public function get(res,data) {
 		if (isNull(res)) {
 			res = "";
@@ -90,6 +91,9 @@ component accessors=true output=false persistent=false {
 		}
 		return doRequest("GET",res,data);
 	}
+	/**
+	 * POST request - create new record (typical use case)
+	 **/
 	public function post(res,data) {
 		if (isNull(res)) {
 			res = "";
@@ -102,6 +106,9 @@ component accessors=true output=false persistent=false {
 		}
 		return doRequest("POST",res,data);
 	}
+	/**
+	 * PUT request - update entire record (typical use case)
+	 **/
 	public function put(res,data) {
 		if (isNull(res)) {
 			res = "";
@@ -114,6 +121,10 @@ component accessors=true output=false persistent=false {
 		}
 		return doRequest("PUT",res,data);
 	}
+	/**
+	 * PATCH request - update record with delta (typical use case)
+	 * NOTE: this does not work in CF10-, and is redirected to PUT
+	 **/
 	public function patch(res,data) {
 		if (isNull(res)) {
 			res = "";
@@ -124,8 +135,16 @@ component accessors=true output=false persistent=false {
 		} else if (isNull(data)) {
 			data = "";
 		}
-		return doRequest("PATCH",res,data);
+		
+		// CF10 does not support PATCH requests???
+		if (isNull(server.railo) && val(server.coldfusion.productversion) == 10)
+			return doRequest("PUT",res,data);
+		else
+			return doRequest("PATCH",res,data);
 	}
+	/**
+	 * DELETE request - delete a record
+	 **/
 	public function delete(res,data) {
 		if (isNull(res)) {
 			res = "";

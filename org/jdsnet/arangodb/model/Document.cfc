@@ -34,10 +34,12 @@ component accessors=true output=false persistent=false {
 	property Collection collection;
 	property struct originalDocument;
 	property struct currentDocument;
-	property string updateMode default="patch";
+	property string updateMode;
 	
 	this.MODE_UPDATE = "patch";
 	this.MODE_REPLACE = "put";
+	
+	this.setUpdateMode(this.MODE_REPLACE);
 	
 	variables.currentDocument	= {};
 	variables.dirty				= true;
@@ -117,11 +119,13 @@ component accessors=true output=false persistent=false {
 		if (isNull(this.getCollection()))
 			throw("No collection specified.");
 		
-		if (isNull(this.getId()))
-			var res = openService("document").post(variables.COL_RES,variables.currentDocument)
-		else
-			var res = openService("document")[this.getUpdateMode()](this.getId(),variables.currentDocument);
-		
+		if (isNull(this.getId())) {
+			var res = openService("document").post(variables.COL_RES,variables.currentDocument);
+		} else {
+			var svc = openService("document");
+			svc._updater = svc[this.getUpdateMode()];
+			var res = svc._updater(this.getId(),variables.currentDocument);
+		}
 		
 		structDelete(res,"error");
 		structappend(variables.currentDocument,res);

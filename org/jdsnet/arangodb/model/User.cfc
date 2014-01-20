@@ -34,6 +34,9 @@ component accessors=true output=false persistent=false extends=Document {
 	property boolean active;
 	property boolean exists;
 	
+	// by default, try using the UPDATE mode
+	this.setUpdateMode(this.MODE_UPDATE);
+	
 	public function init(string name, string password, struct extra={}, Database db) {
 		if (!isNull(arguments.db))			this.setDatabase(arguments.db);
 		if (!isNull(arguments.name)) {
@@ -117,7 +120,9 @@ component accessors=true output=false persistent=false extends=Document {
 				sReqDoc["passwd"] = this.getPassword
 			}
 			
-			openService()[this.getUpdateMode()](variables.name,sReqDoc);
+			svc = openService();
+			svc._updater = openService()[this.getUpdateMode()]
+			svc._updater(variables.name,sReqDoc);
 		}
 		variables.originalDocument = duplicate(variables.currentDocument);
 		

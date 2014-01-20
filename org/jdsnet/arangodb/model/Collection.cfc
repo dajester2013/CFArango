@@ -34,6 +34,11 @@ component accessors=true output=false persistent=false {
 	property string Name;
 	property Database Database;
 	
+	public Collection function init() {
+		structAppend(variables,arguments);
+		return this;
+	}
+	
 	/**
 	 * Creates a document interface.  May be an existing document or a new document - the latter not being created until the save() method is called on the returned Document.
 	 **/
@@ -52,7 +57,7 @@ component accessors=true output=false persistent=false {
 	public Document function save(required record) {
 		if (isInstanceOf(record,"Document")) {
 			record.save();
-		} else if (isStruct(record) || isObject(record)) {
+		} else if (isStruct(record) || isObject(record)) { 
 			record = this.newDocument(record).save();
 		}
 		
