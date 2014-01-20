@@ -20,7 +20,10 @@ NOTE: This project has only been tested on Railo 4.1 and 4.2.  No testing has be
             * **Resource** = /path/to/CFArango (*NOTE: do not add the /org to the resource path!*)
 
     * ACF custom tag path
-        * Add /path/to/CFArango to the custom tags path (not tested)
+        * Add /path/to/CFArango to the custom tags path
+            * Can be set in the Administrator under **Extensions > Custom Tag Paths"
+            * Can be set in Application.cfc
+            <pre>this.customtagpaths="/path/to/CFArango";</pre>
 
 Examples:
 =========
