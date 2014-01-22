@@ -21,6 +21,7 @@
  */
 
 import org.jdsnet.arangodb.model.Database;
+import org.jdsnet.arangodb.model.Collection;
 
 /**
  * Cursor - interface to read data from a statement's execution to a result set
@@ -30,12 +31,13 @@ import org.jdsnet.arangodb.model.Database;
  **/
 component accessors=true output=false persistent=false {
 	
-	property string			Id;
-	property AQLStatement	Statement;
-	property Struct			Params;
-	property Database		Database;
-	property numeric		CurrentCount;
-	property numeric		FullCount;
+	property string				Id;
+	property AQLStatement		Statement;
+	property Struct				Params;
+	property Database			Database;
+	property IDocumentFactory	DocumentFactory
+	property numeric			CurrentCount;
+	property numeric			FullCount;
 	
 	variables.eof=false;
 	variables.svc = "";
@@ -84,12 +86,13 @@ component accessors=true output=false persistent=false {
 		var cols={};
 		
 		while(this.hasNext()) {
-			var doc = this.next();
+			var doc = this.next(false);
 			
-			if (!IsStruct(doc))
+			if (!IsStruct(doc)) {
 				throw("Cannot convert to query - expected collection of objects");
-			else if (isInstanceOf(doc,"Document"))
+			} else if (isInstanceOf(doc,"Document")) {
 				doc = doc.get();
+			}
 
 			if (isNull(populateQuery)) {
 				populateQuery = querynew(structkeylist(doc));
@@ -122,7 +125,7 @@ component accessors=true output=false persistent=false {
 	 * Iterate over all documents, calling @callable for each document.
 	 * @callable A function, closure, or object that implements call()
 	 */
-	public function each(required callable) {
+	public function each(required callable, boolean allowDocumentFetch=true) {
 		var idx=0;
 		while(this.hasNext()) {
 			if (applyToCallback(callable,[this.next(),++idx]) === false) {
@@ -156,9 +159,10 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Returns the next available document.
 	 */
-	public any function next() {
-		if (eof)
+	public any function next(boolean allowDocumentFetch=true) {
+		if (eof) {
 			throw("End of resultset has been reached");
+		}
 
 		var curBatch = this.getCurrentBatch();
 		if (curBatch.curIdx == curBatch.count || curBatch.curIdx == curBatch.batchSize){
@@ -166,15 +170,22 @@ component accessors=true output=false persistent=false {
 			curBatch = this.getCurrentBatch();
 		}
 		
-		return curBatch.result[++curBatch.curIdx];
+		var doc = curBatch.result[++curBatch.curIdx];
+		
+		if (allowDocumentFetch && !isNull(this.getDocumentFactory())) {
+			doc =  this.getDocumentFactory().newDocument(doc);
+		}
+		
+		return doc;
 	}
 	
 	/**
 	 * Returns the next available resultset.
 	 */
 	public any function nextBatch() {
-		if (eof)
+		if (eof) {
 			throw("End of resultset has been reached");
+		}
 
 		var curBatch = this.getCurrentBatch();
 		if (curBatch.curIdx == curBatch.count) {
@@ -201,10 +212,12 @@ component accessors=true output=false persistent=false {
 			for (var i=1; i<=arraylen(args); i++) _args[i]=args[i];
 		} 
 
-		if (IsCustomFunction(cb) || structKeyExists(getMetaData(cb),"closure"))
+		if (IsCustomFunction(cb) || structKeyExists(getMetaData(cb),"closure")) {
 			cb(argumentCollection=_args);
-		if (IsObject(cb) && StructKeyExists(cb,"call") && IsCustomFunction(cb.call))
+		}
+		if (IsObject(cb) && StructKeyExists(cb,"call") && IsCustomFunction(cb.call)) {
 			cb.call(argumentCollection=_args);
+		}
 	}
 	
 
@@ -214,8 +227,9 @@ component accessors=true output=false persistent=false {
 	}
 
 	private function getService() {
-		if (isNull(variables._cursorService))
+		if (isNull(variables._cursorService)) {
 			variables._cursorService = this.getDatabase().getConnection().openService("cursor",this.getDatabase().getName());
+		}
 		return variables._cursorService;
 	}
 
@@ -232,19 +246,22 @@ component accessors=true output=false persistent=false {
 		variables._currentBatch.curIdx=0;
 		variables._currentBatch.batchSize = arraylen(variables._currentBatch.result);
 		
-		if (structKeyExists(variables._currentBatch,"id"))
+		if (structKeyExists(variables._currentBatch,"id")) {
 			this.setId(variables._currentBatch.id);
+		}
 
 		if (	structKeyExists(variables._currentBatch,"extra")
-			&&	structKeyExists(variables._currentBatch.extra,"fullCount"))
+			&&	structKeyExists(variables._currentBatch.extra,"fullCount")) {
 			setFullCount(variables._currentBatch.extra.fullCount);
-		else
+		} else {
 			setFullCount(variables._currentBatch.count);
+		}
 	}
 	
 	private function readNextBatch() {
-		if (eof)
+		if (eof) {
 			throw("End of resultset has been reached");
+		}
 		variables._currentBatch				= getService().put(variables._currentBatch.id);
 		variables._currentBatch.curIdx		= 0;
 		variables._currentBatch.batchSize	= arraylen(variables._currentBatch.result);

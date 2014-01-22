@@ -21,6 +21,7 @@
  */
 
 import org.jdsnet.arangodb.query.Cursor;
+import org.jdsnet.arangodb.type.IDocumentFactory;
 
 /**
  * Collection
@@ -28,7 +29,7 @@ import org.jdsnet.arangodb.query.Cursor;
  * @author jesse.shaffer
  * @date 11/30/13
  **/
-component accessors=true output=false persistent=false {
+component accessors=true output=false persistent=false implements="IDocumentFactory" {
 
 	property struct Properties;
 	property string Name;
@@ -126,19 +127,17 @@ component accessors=true output=false persistent=false {
 				,"skip"			= arguments.skip
 			};
 			
-			if (!isNull(arguments.limit) && isNumeric(arguments.limit))
+			if (!isNull(arguments.limit) && isNumeric(arguments.limit)) {
 				sreq["limit"] = arguments.limit;
+				}
 			
 			response = openService("simple/by-example").put(sreq);
 			
-			if (!raw) {
-				for (var i=1; i<=arraylen(response.result); i++) {
-					response.result[i] = this.newDocument(response.result[i]);
-				}
-			}
-			
 			var cursor = new Cursor(response);
 			cursor.setDatabase(this.getDatabase());
+			if (!raw) {
+				cursor.setDocumentFactory(this);
+			}
 			return cursor;
 		}
 	}
@@ -160,8 +159,11 @@ component accessors=true output=false persistent=false {
 		}
 
 		var cursor = new Cursor(response);
-			cursor.setDatabase(this.getDatabase());
-			return cursor;
+		cursor.setDatabase(this.getDatabase());
+		if (!raw) {
+			cursor.setDocumentFactory(this);
+		}
+		return cursor;
 	}
 	
 	/**
@@ -174,11 +176,13 @@ component accessors=true output=false persistent=false {
 			,"newValue"		= update
 			,"keepNull"		= arguments.keepNull
 		};
-		if (!isNull(arguments.limit))
+		if (!isNull(arguments.limit)) {
 			srequest["limit"] = arguments.limit;
+		}
 		
-		if (!isNull(waitForSync))
+		if (!isNull(waitForSync)) {
 			srequest["waitForSync"] = arguments.waitForSync;
+		}
 		
 		var response = openService("simple/update-by-example").put(srequest);
 		
@@ -194,10 +198,12 @@ component accessors=true output=false persistent=false {
 			,"collection"	= this.getName()
 			,"newValue"		= update
 		};
-		if (!isNull(arguments.limit))
+		if (!isNull(arguments.limit)) {
 			srequest["limit"] = arguments.limit;
-		if (!isNull(waitForSync))
+		}
+		if (!isNull(waitForSync)) {
 			srequest["waitForSync"] = arguments.waitForSync;
+		}
 		
 		var response = openService("simple/replace-by-example").put(srequest);
 		
@@ -212,10 +218,12 @@ component accessors=true output=false persistent=false {
 			 "example"		= arguments.example
 			,"collection"	= this.getName()
 		};
-		if (!isNull(arguments.limit))
+		if (!isNull(arguments.limit)) {
 			srequest["limit"] = arguments.limit;
-		if (!isNull(waitForSync))
+		}
+		if (!isNull(waitForSync)) {
 			srequest["waitForSync"] = arguments.waitForSync;
+		}
 		
 		var response = openService("simple/remove-by-example").put(srequest);
 		
@@ -240,8 +248,9 @@ component accessors=true output=false persistent=false {
 	 * Get properties about this Collection
 	 **/
 	public function getProperties() {
-		if (!structKeyExists(variables,"properties"))
+		if (!structKeyExists(variables,"properties")) {
 			variables.properties = openService("collection").get("#this.getName()#/properties");
+		}
 		
 		return variables.properties;
 	}
