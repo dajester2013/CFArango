@@ -57,14 +57,16 @@ component accessors=true output=false persistent=false extends=Document {
 	}
 	
 	public function setId(required string id, boolean doSetName=true) {
-		if (arguments.doSetName)
+		if (arguments.doSetName) {
 			this.setName(arguments.id,false);
+		}
 		variables.id = arguments.id;
 	}
 	
 	public function setName(required string name, boolean doSetId=true) {
-		if (arguments.doSetId)
+		if (arguments.doSetId) {
 			this.setId(arguments.name,false);
+		}
 		
 		structDelete(variables,"exists");
 		

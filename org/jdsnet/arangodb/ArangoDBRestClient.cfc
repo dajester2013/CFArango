@@ -54,8 +54,9 @@ component accessors=true output=false persistent=false {
 		svcRequest.setUrl(svcUrl);
 		svcRequest.addParam(type="header",name="Accepts",value="application/json");
 		
-		if (!isNull(this.getCredentials()))
+		if (!isNull(this.getCredentials())) {
 			this.getCredentials().bind(svcRequest);
+		}
 		
 		var svcResult = svcRequest.send().getPrefix();
 		var responseData = deserializeJson(svcResult.filecontent);
@@ -137,10 +138,11 @@ component accessors=true output=false persistent=false {
 		}
 		
 		// CF10 does not support PATCH requests???
-		if (isNull(server.railo) && val(server.coldfusion.productversion) == 10)
+		if (isNull(server.railo) && val(server.coldfusion.productversion) == 10) {
 			return doRequest("PUT",res,data);
-		else
+		} else {
 			return doRequest("PATCH",res,data);
+		}
 	}
 	/**
 	 * DELETE request - delete a record

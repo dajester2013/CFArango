@@ -45,8 +45,9 @@ component accessors=true output=false persistent=false {
 	variables.dirty				= true;
 	
 	public Document function init(struct document={}, Collection collection) {
-		if (!isNull(arguments.collection))
+		if (!isNull(arguments.collection)) {
 			this.setCollection(arguments.collection);
+		}
 		
 		this.setCurrentDocument(duplicate(arguments.document));
 		
@@ -78,8 +79,9 @@ component accessors=true output=false persistent=false {
 	}
 	
 	public Document function put(required string key, required any value) {
-		if (key != '_id')
+		if (key != '_id') {
 			variables.currentDocument[key] = value;
+		}
 		
 		variables.dirty = !structKeyExists(variables.originalDocument,key) || (!isObject(variables.currentDocument[key]) && variables.currentDocument[key] != variables.originalDocument[key]);
 		
@@ -107,8 +109,9 @@ component accessors=true output=false persistent=false {
 	public any function get(string key="") {
 		var rv = variables.currentDocument;
 		
-		if (len(arguments.key))
+		if (len(arguments.key)) {
 			rv = rv[key];
+		}
 			
 		return duplicate(rv);
 	}
@@ -116,8 +119,9 @@ component accessors=true output=false persistent=false {
 	public Document function save(boolean force=false) {
 		if (!force && !dirty) return this;
 		
-		if (isNull(this.getCollection()))
+		if (isNull(this.getCollection())) {
 			throw("No collection specified.");
+		}
 		
 		if (isNull(this.getId())) {
 			var res = openService("document").post(variables.COL_RES,variables.currentDocument);
@@ -131,12 +135,15 @@ component accessors=true output=false persistent=false {
 		structappend(variables.currentDocument,res);
 		structappend(variables.originalDocument,variables.currentDocument);
 		
-		if (structKeyExists(res,"_id"))
+		if (structKeyExists(res,"_id")) {
 			variables.id=res._id;
-		if (structKeyExists(res,"_key"))
+		}
+		if (structKeyExists(res,"_key")) {
 			this.setKey(res._key);
-		if (structKeyExists(res,"_rev"))
+		}
+		if (structKeyExists(res,"_rev")) {
 			this.setRev(res._rev);
+		}
 		
 		dirty=false;
 		return this;
@@ -154,8 +161,9 @@ component accessors=true output=false persistent=false {
 	}
 
 	public Edge function createEdge(required any collection, struct edgeData={}) {
-		if (!isObject(arguments.collection))
+		if (!isObject(arguments.collection)) {
 			arguments.collection = this.getCollection().getDatabase().getCollection(arguments.collection);
+		}
 
 		var edge = new Edge(arguments.edgeData,arguments.collection);
 		edge.setInitiator(this);

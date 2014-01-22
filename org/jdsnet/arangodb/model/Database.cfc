@@ -45,15 +45,17 @@ component accessors=true output=false persistent=false {
 	
 	private void function setId(id) {variables.id=arguments.id;}
 	public string function getId() {
-		if (isNull(variables.id))
+		if (isNull(variables.id)) {
 			structappend(variables,this.getInfo());
+		}
 		return variables.id;
 	}
 	
 	private void function setIsSystem(boolean isSys) {variables.isSystem=arguments.isSys;}
 	public string function getIsSystem() {
-		if (isNull(variables.isSystem))
+		if (isNull(variables.isSystem)) {
 			structappend(variables,this.getInfo());
+		}
 		return variables.isSystem;
 	}
 	
