@@ -25,7 +25,7 @@ Installation:
 
     * ACF custom tag path
         * Add /path/to/CFArango to the custom tags path
-            * Can be set in the Administrator under **Extensions > Custom Tag Paths"
+            * Can be set in the Administrator under **Extensions > Custom Tag Paths**
             * Can be set in Application.cfc
             <pre>this.customtagpaths="/path/to/CFArango";</pre>
 
