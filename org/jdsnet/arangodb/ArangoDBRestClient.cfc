@@ -59,7 +59,7 @@ component accessors=true output=false persistent=false {
 		}
 		
 		var svcResult = svcRequest.send().getPrefix();
-		var responseData = deserializeJson(svcResult.filecontent);
+		var responseData = isJson(svcResult.filecontent) ? deserializeJson(svcResult.filecontent) : svcResult.filecontent;
 		
 		if (svcResult.statusCode >= 400) {
 			if (!isNull(this.getErrorHandler()) && (isCustomFunction(this.getErrorHandler()) || structKeyExists(getMetaData(this.getErrorHandler()),"closure"))) {
