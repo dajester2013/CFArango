@@ -3,10 +3,14 @@ CFArango
 
 CFML client library for ArangoDB.
 
+Requirements
+===========
+Railo 4.1+
+or
+Adobe ColdFusion 10+
+
 Installation:
 =============
-
-NOTE: This project has only been tested on Railo 4.1 and 4.2.  No testing has been done on ACF, however it should still work.
 
 1. Clone the repository: 
     <pre>git clone https://github.com/dajester2013/CFArango.git</pre>
