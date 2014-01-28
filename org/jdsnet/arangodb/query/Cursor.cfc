@@ -68,18 +68,25 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 	
+	/**
+	 * Sets the cursor's statement and reads some required information
+	 * @Statement The AQL prepared statement to execute.
+	 **/
 	public Cursor function setStatement(required AQLStatement Statement) {
 		variables.Statement = arguments.Statement;
 		variables.Database = arguments.Statement.getDatabase();
 		return this;
 	}
 
+	/**
+	 * Gets the number of records in the current batch
+	 **/
 	public numeric function getCurrentCount() {
 		return variables._currentBatch.count;
 	}
 
 	/**
-	 * Reads the data from the statement into a query object.
+	 * Reads the entire cursor into a query object.
 	 * @populateQuery An optional query object to populate.
 	 */
 	public query function toQuery(query populateQuery) {
@@ -110,9 +117,12 @@ component accessors=true output=false persistent=false {
 			}
 		}
 		
-		return populateQuery;
+		return isNull(populateQuery) ? queryNew("_id") : populateQuery;
 	}
 	
+	/**
+	 * Reads the entire cursor into an array of documents.
+	 **/
 	public array function toArray() {
 		var res = [];
 		while(this.hasNext()) {
