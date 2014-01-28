@@ -21,7 +21,7 @@
  */
 
 /**
- * ArangoDB
+ * ArangoDB Connection
  * 
  * @author jesse.shaffer
  * @date 11/30/13
@@ -31,7 +31,15 @@ component accessors=true output=false persistent=false {
 	property string Protocol;
 	property string Host;
 	property string Port;
+	property number State;
 	property Credentials Credentials;
+	
+	this.UNOPENED	= 0;
+	this.OPENED		= 1;
+	this.CLOSED		= 2;
+	this.ERROR		= 3;
+	
+	variables.state = this.UNOPENED;
 	
 	this.setProtocol("http");
 	this.setHost("localhost");
@@ -41,23 +49,91 @@ component accessors=true output=false persistent=false {
 	
 	this.setCredentials(new BasicCredentials());
 	
-	public string function getServerVersion() {
-		return this.openService("version").get().version;
+	/**
+	 * Open the connection immediately (verifies the connection by reading version information)
+	 **/
+	public Connection function open() {
+		if (this.getState() == this.OPENED) {
+			return this;
+		} else if (this.getState() > this.CLOSED) {
+			invalidState("Cannot open this connection - it is in an error state.");
+		}
+		
+		variables.state = this.OPENED;
+		try {
+			this.getServerVersion(true);
+		} catch(any e) {
+			variables.state = this.ERROR;
+			throw(object=e);
+		}
+		
+		return this;
 	}
 	
+	/**
+	 * Close the connection.
+	 **/
+	public Connection function close() {
+		variables.state = this.CLOSED;
+		return this;
+	}
+	
+	/**
+	 * Clears out an error state by forcing closed then returning to an UNOPENED state.
+	 **/
+	public Connection function clearErrorState() {
+		this.close();
+		variables.state = this.UNOPENED;
+		return this;
+	}
+	
+	/**
+	 * Returns the current server version
+	 * @force Whether or not to force a read from the server.
+	 **/
+	public string function getServerVersion(boolean force=false) {
+		if (isNull(variables.serverVersion) || force)
+			variables.serverVersion = this.openService("version").get().version;
+		return variables.serverVersion;
+	}
+	
+	/**
+	 * Opens a service client for a specific resource/database.  This will automatically open the connection if it is in an UNOPENED state.
+	 * @resource The ArangoDB API resource (the url portion following /_api/, ex. "document", or "collection")
+	 * @database The specific database to execute the service against, ex. "_system".
+	 **/
 	public ArangoDBRestClient function openService(string resource, string database="_system") {
+		if (this.getState() < this.OPENED) {
+			this.open();
+		} else if (this.getState() > this.OPENED) {
+			invalidState("The connection is not open.");
+		}
 		return new ArangoDBRestClient(
 			 baseUrl = this.getProtocol() & "://" & this.getHost() & ":" & this.getPort() & "/_db/" & arguments.database & "/_api/" & arguments.resource
 			,credentials = this.getCredentials()
 		);
 	}
 	
+	/**
+	 * Returns a list of databases a user has access to.  This is somewhat tricky when the user does not have access to the _system database.  Therefore, in those situations, you must pass the user's primary database.
+	 * @primaryDatabase The name of a database the user has read access to that is their "primary" database.
+	 **/
 	public array function getUserDatabases(primaryDatabase="_system") {
 		return this.openService("database/user",primaryDatabase).get().result;
 	}
 
+	/**
+	 * Returns a database model interface, which is the primary object used to interact with ArangoDB from a client standpoint.
+	 * @name The database name
+	 **/
 	public model.Database function getDatabase(required string name) {
 		return new model.Database(name=name, connection=this);
 	}
 	
+	
+	private function setState() {}
+	
+	private function invalidState(required string detail) {
+		throw(type="InvalidStateException",message="Connection is in an invalid state.",detail=detail,errorCode=this.getState());
+	}
 }
