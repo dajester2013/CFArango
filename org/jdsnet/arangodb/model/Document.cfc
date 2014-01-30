@@ -22,6 +22,7 @@
 
 /**
  * Document
+ * This object wraps a document stored within an ArangoDB database.
  * 
  * @author jesse.shaffer
  * @date 11/30/13
@@ -44,6 +45,11 @@ component accessors=true output=false persistent=false {
 	variables.currentDocument	= {};
 	variables.dirty				= true;
 	
+	/**
+	 * Constructor
+	 * @document The initial set of data to wrap.  If an _id is set, this document is assumed to exist in the database already.
+	 * @collection (Optional) The collection model representative of where this document is stored.
+	 **/
 	public Document function init(struct document={}, Collection collection) {
 		if (!isNull(arguments.collection)) {
 			this.setCollection(arguments.collection);
@@ -64,6 +70,10 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 	
+	/**
+	 * Change the collection for this document.  Changing the collection of an existing document does not remove the document from the previous collection automatically.
+	 * @collection The new collection to save this document to.
+	 **/
 	public Document function setCollection(Collection collection) {
 		variables.COL_RES = "?collection="&collection.getName();
 		variables.collection=collection;
@@ -78,16 +88,30 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 	
+	/**
+	 * Put a value into this document.
+	 * @key Key name
+	 * @value Value
+	 **/
 	public Document function put(required string key, required any value) {
 		if (key != '_id') {
 			variables.currentDocument[key] = value;
 		}
-		
-		variables.dirty = !structKeyExists(variables.originalDocument,key) || (!isObject(variables.currentDocument[key]) && variables.currentDocument[key] != variables.originalDocument[key]);
+
+		// flag dirty if there is a change between the current and original documents
+		variables.dirty =  variables.dirty
+						|| !structKeyExists(variables.originalDocument,key)
+						|| !isSimpleValue(variables.currentDocument[key])
+						|| !isSimpleValue(variables.originalDocument[key])
+						|| variables.currentDocument[key] != variables.originalDocument[key];
 		
 		return this;
 	}
 	
+	/**
+	 * Appends a struct of values into this document.
+	 * @values The values to add
+	 **/
 	public Document function putAll(required struct values) {
 		StructAppend(variables.currentDocument,values);
 		
@@ -95,7 +119,11 @@ component accessors=true output=false persistent=false {
 		
 		return this;
 	}
-	
+
+	/**
+	 * Delete a key from the document.  This automatically switches save mode to MODE_REPLACE.
+	 * @key The key to delete
+	 **/
 	public Document function clear(string key) {
 		if (!isNull(key)) {
 			structDelete(variables.currentDocument,key);
@@ -106,6 +134,10 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 	
+	/**
+	 * Get a value from the current document
+	 * @key (Optional) Which key to retrieve. If left blank the entire contents of the currentdocument is returned.
+	 **/
 	public any function get(string key="") {
 		var rv = variables.currentDocument;
 		
@@ -116,6 +148,10 @@ component accessors=true output=false persistent=false {
 		return duplicate(rv);
 	}
 	
+	/**
+	 * Save the document to the configured collection.
+	 * @force Whether or not to ignore the dirty flag.
+	 **/
 	public Document function save(boolean force=false) {
 		if (!force && !dirty) return this;
 		
@@ -149,17 +185,28 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 	
+	/**
+	 * Determine whether or not the document is dirty - that is, it has been changed from the original document.
+	 **/
 	public boolean function isDirty() {
 		return dirty;
 	}
 	
-	
+	/**
+	 * Delete the document from the database.  This method is destructive to the database as well as this object.
+	 * If successful, all keys in this document model will be cleared.
+	 **/
 	public boolean function delete() {
 		var res = !openService("document").delete(this.getId()).error;
-		structclear(variables);
+		if (res) structclear(variables);
 		return res;
 	}
 
+	/**
+	 * This creates an edge document in order to connect this document to another document.
+	 * @collection An edge collection model or the name of the edge collection.
+	 * @edgeData Extra information to track in the edge document (do not pass _to/_from in this struct)
+	 **/
 	public Edge function createEdge(required any collection, struct edgeData={}) {
 		if (!isObject(arguments.collection)) {
 			arguments.collection = this.getCollection().getDatabase().getCollection(arguments.collection);
@@ -170,11 +217,19 @@ component accessors=true output=false persistent=false {
 		return edge;
 	}
 	
-	public function setId() {}
+	/**
+	 * Get the current document (read only)
+	 **/
 	public function getCurrentDocument() {return this.get();}
+
+	/**
+	 * Get the original document (read only)
+	 **/
 	public function getOriginalDocument() {return duplicate(variables.originaldocument);}
 	
+	private function setId() {}
 	private function openService(required string svc) {
 		return this.getCollection().getDatabase().getConnection().openService(svc,this.getCollection().getDatabase().getName());
 	}
+
 }
