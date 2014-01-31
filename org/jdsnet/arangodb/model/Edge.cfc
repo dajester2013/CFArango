@@ -31,6 +31,13 @@ component accessors=true output=false persistent=false extends="Document" {
 	property any _to;
 	property any _from;
 
+	public Edge function init(struct document={}, Collection collection) {
+		super.init(argumentCollection=arguments);
+		if (structKeyExists(document,"_to")) this.to(document._to);
+		if (structKeyExists(document,"_from")) this.from(document._from);
+		return this;
+	}
+
 	package function setInitiator(Document doc) {
 		variables.initiator = doc;
 	}
