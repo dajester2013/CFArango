@@ -95,15 +95,27 @@ component accessors=true output=false persistent=false {
 	 **/
 	public Document function put(required string key, required any value) {
 		if (key != '_id') {
-			variables.currentDocument[key] = value;
+			var putinto = variables.currentDocument;
+			var keyparts = key.split("\.");
+			var keypartslen = arraylen(keyparts);
+			for(var i=1; i<keypartslen; i++) {
+				if (isNull(putinto[keyparts[i]])) {
+					putinto = putinto[keyparts[i]] = isNumeric(keyparts[i+1])?[]:{};
+				} else if (isStruct(putinto[keyparts[i]]) || isArray(putinto[keyparts[i]])) {
+					putinto = putinto[keyparts[i]];
+				} else {
+					throw(type="InvalidDestinationException",message="Cannot put value at the key requested - it is assigned a simple value already.");
+				}
+			}
+			
+			if (isArray(putinto) && !isNumeric(keyparts[i])) {
+				throw(type="InvalidDestinationException",message="Cannot put value at the key requested - attempted to use a string for an array index.");
+			}
+			
+			putinto[keyparts[i]] = value;
+		
+			variables.dirty = true;
 		}
-
-		// flag dirty if there is a change between the current and original documents
-		variables.dirty =  variables.dirty
-						|| !structKeyExists(variables.originalDocument,key)
-						|| !isSimpleValue(variables.currentDocument[key])
-						|| !isSimpleValue(variables.originalDocument[key])
-						|| variables.currentDocument[key] != variables.originalDocument[key];
 		
 		return this;
 	}
@@ -142,7 +154,15 @@ component accessors=true output=false persistent=false {
 		var rv = variables.currentDocument;
 		
 		if (len(arguments.key)) {
-			rv = rv[key];
+			var keyparts = key.split("\.");
+			var keypartslen = arraylen(keyparts);
+			for(var i=1; i<=keypartslen; i++){
+				if (!isNull(rv[keyparts[i]])) {
+					rv = rv[keyparts[i]];
+				} else {
+					return; // could  not find at the requested level, return "null"
+				}
+			}
 		}
 			
 		return duplicate(rv);
