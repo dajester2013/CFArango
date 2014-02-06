@@ -25,6 +25,7 @@ import org.jdsnet.arangodb.model.Collection;
 
 /**
  * Cursor - interface to read data from a statement's execution to a result set
+ * This is a one-use object. You cannot iterate a single cursor more than once.
  * 
  * @author jesse.shaffer
  * @date 12/7/13
