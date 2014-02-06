@@ -35,7 +35,7 @@ component accessors=true output=false persistent=false {
 	property AQLStatement		Statement;
 	property Struct				Params;
 	property Database			Database;
-	property IDocumentFactory	DocumentFactory
+	property IDocumentFactory	DocumentFactory;
 	property numeric			CurrentCount;
 	property numeric			FullCount;
 	
@@ -123,10 +123,10 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Reads the entire cursor into an array of documents.
 	 **/
-	public array function toArray() {
+	public array function toArray(boolean allowDocumentFetch=true) {
 		var res = [];
 		while(this.hasNext()) {
-			arrayappend(res,this.nextBatch(),true);
+			arrayappend(res,this.nextBatch(allowDocumentFetch),true);
 		}
 		return res;
 	}
@@ -183,7 +183,7 @@ component accessors=true output=false persistent=false {
 		var doc = curBatch.result[++curBatch.curIdx];
 		
 		if (allowDocumentFetch && !isNull(this.getDocumentFactory())) {
-			doc =  this.getDocumentFactory().newDocument(doc);
+			doc = this.getDocumentFactory().newDocument(doc);
 		}
 		
 		return doc;
@@ -192,7 +192,7 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Returns the next available resultset.
 	 */
-	public any function nextBatch() {
+	public any function nextBatch(boolean allowDocumentFetch=true) {
 		if (eof) {
 			throw("End of resultset has been reached");
 		}
@@ -203,7 +203,15 @@ component accessors=true output=false persistent=false {
 			curBatch = this.getCurrentBatch();
 		}
 		curBatch.curIdx = curBatch.count;
-		return curBatch.result;
+		if (allowDocumentFetch && !isNull(this.getDocumentFactory())) {
+			var rv = duplicate(curBatch.result);
+			for (var i = 1; i<=arraylen(rv); i++) {
+				rv[i] = this.getDocumentFactory().newDocument(rv[i]);
+			}
+			return rv;
+		} else {
+			return curBatch.result;
+		}
 	}
 	
 
