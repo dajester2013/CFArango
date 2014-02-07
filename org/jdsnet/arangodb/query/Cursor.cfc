@@ -215,7 +215,9 @@ component accessors=true output=false persistent=false {
 		}
 	}
 	
-
+	/**
+	 * Gets the raw contents of the current batch as returned by the server.
+	 **/
 	public struct function getCurrentBatch() {
 		if (isNull(variables._currentBatch)) {
 			readInitial();
