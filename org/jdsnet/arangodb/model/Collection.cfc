@@ -234,7 +234,7 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	 * Create an index on this collection
 	 **/
 	public struct function createIndex(required struct indexParams) {
-		return openService("index").post("?collection=#this.getName#",indexParams);
+		return openService("index").post("?collection=#this.getName()#",indexParams);
 	}
 	
 	/**

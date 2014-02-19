@@ -66,6 +66,10 @@ component accessors=true output=false persistent=false {
 	public org.jdsnet.arangodb.query.AQLStatement function prepareStatement(required string aql) {
 		return new org.jdsnet.arangodb.query.AQLStatement(statement=aql,database=this);
 	}
+
+	public org.jdsnet.arangodb.transaction.Transaction function prepareTransaction(string statement="") {
+		return new org.jdsnet.arangodb.transaction.Transaction(statement=statement,database=this);
+	}
 	
 	public struct function getCollections(string type="user") {
 		

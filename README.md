@@ -15,15 +15,16 @@ Installation:
 1. Clone the repository: 
     <pre>git clone https://github.com/dajester2013/CFArango.git</pre>
 2. Add mapping to the code (not necessary if project is cloned into your project/webserver root).
-    * Railo/ACF Application.cfc mapping:
+   Use one of the following methods:
+    1. Railo/ACF Application.cfc mapping:
     <pre>this.mappings["/org"] = [/path/to/CFArango]/org</pre>
-    * Railo Component resource mapping:
+    2. Railo Component resource mapping:
         * Navigate to the administrator page (server or web depending on how wide you desire access)
         * Under **Archives & Resources > Component**, add a resouce:
             * **Name** = cfarango
             * **Resource** = /path/to/CFArango (*NOTE: do not add the /org to the resource path!*)
 
-    * ACF custom tag path
+    3. ACF custom tag path
         * Add /path/to/CFArango to the custom tags path
             * Can be set in the Administrator under **Extensions > Custom Tag Paths**
             * Can be set in Application.cfc

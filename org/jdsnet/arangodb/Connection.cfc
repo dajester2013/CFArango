@@ -33,6 +33,9 @@ component accessors=true output=false persistent=false {
 	property string Port;
 	property number State;
 	property Credentials Credentials;
+	property string Database;
+	
+	this.setDatabase("_system");
 	
 	this.UNOPENED	= 0;
 	this.OPENED		= 1;
@@ -102,7 +105,7 @@ component accessors=true output=false persistent=false {
 	 * @resource The ArangoDB API resource (the url portion following /_api/, ex. "document", or "collection")
 	 * @database The specific database to execute the service against, ex. "_system".
 	 **/
-	public ArangoDBRestClient function openService(string resource, string database="_system") {
+	public ArangoDBRestClient function openService(string resource, string database=variables.database) {
 		if (this.getState() < this.OPENED) {
 			this.open();
 		} else if (this.getState() > this.OPENED) {
@@ -118,15 +121,15 @@ component accessors=true output=false persistent=false {
 	 * Returns a list of databases a user has access to.  This is somewhat tricky when the user does not have access to the _system database.  Therefore, in those situations, you must pass the user's primary database.
 	 * @primaryDatabase The name of a database the user has read access to that is their "primary" database.
 	 **/
-	public array function getUserDatabases(primaryDatabase="_system") {
-		return this.openService("database/user",primaryDatabase).get().result;
+	public array function getUserDatabases(database=variables.database) {
+		return this.openService("database/user",database).get().result;
 	}
 
 	/**
 	 * Returns a database model interface, which is the primary object used to interact with ArangoDB from a client standpoint.
 	 * @name The database name
 	 **/
-	public model.Database function getDatabase(required string name) {
+	public model.Database function getDatabase(string name=variables.database) {
 		return new model.Database(name=name, connection=this);
 	}
 	
