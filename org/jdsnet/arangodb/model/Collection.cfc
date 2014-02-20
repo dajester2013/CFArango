@@ -42,27 +42,29 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Creates a document interface.  May be an existing document or a new document - the latter not being created until the save() method is called on the returned Document.
+	 * @document Initial raw document
 	 **/
-	public Document function newDocument(struct data={}) {
+	public Document function newDocument(struct document={}) {
 		var type = this.getProperties().type;
 		if (type == 2) {
-			return new Document(data,this);
+			return new Document(document,this);
 		} else if (type == 3) {
-			return new Edge(data,this);
+			return new Edge(document,this);
 		}
 	}
 	
 	/**
 	 * Creates a new document in the collection
+	 * @record Initial raw document
 	 **/
-	public Document function save(required record) {
-		if (isInstanceOf(record,"Document")) {
-			record.save();
-		} else if (isStruct(record) || isObject(record)) { 
-			record = this.newDocument(record).save();
+	public Document function save(required document) {
+		if (isInstanceOf(document,"Document")) {
+			document.save();
+		} else if (isStruct(document) || isObject(document)) { 
+			document = this.newDocument(document).save();
 		}
 		
-		return record;
+		return document;
 	}
 	
 	/**
@@ -81,6 +83,7 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Get a document by id/key
+	 * @key Document-handle or document key.
 	 **/
 	public Document function getDocument(required string key) {
 		return this.newDocument(openService("document").get("#this.getName()#/#key.replaceAll("[^\/]+\/","")#"));
@@ -108,7 +111,11 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	}
 	
 	/**
-	 * Search for documents that match {example}
+	 * Search for documents that match the given example
+	 * @example A partial document to match against.
+	 * @limit How many documents to return
+	 * @skip How many matching documents to skip before returning results
+	 * @raw Whether or not to force returning the raw document(s)
 	 **/
 	public any function queryByExample(required struct example, any limit, numeric skip=0, boolean raw=false) {
 		var response = {};
@@ -144,6 +151,9 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Perform a full text search
+	 * @attribute The attribute to search across documents.
+	 * @searchText Text to search for across documents
+	 * @raw Wheter or not to force returning the raw document(s)
 	 **/
 	public array function fullTextSearch(required string attribute, required string searchText, boolean raw=false) {
 		var response = openService("simple/fulltext").put({
@@ -168,6 +178,11 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Adds/updates keys set in {update} to all documents matched by {example}, up to {limit}
+	 * @example A partial document to match against.
+	 * @update A document specification to use to update matched documents.
+	 * @limit How many documents to return
+	 * @skip How many matching documents to skip before returning results
+	 * @raw Whether or not to force returning the raw document(s)
 	 **/
 	public struct function updateByExample(required struct example, required struct update, numeric limit, boolean keepNull=true, boolean waitForSync) {
 		var srequest = {
@@ -191,6 +206,11 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Replaces all keys in documents matched by {example} with the keys set in {update}, up to {limit}
+	 * @example A partial document to match against.
+	 * @update A document specification to use to replace matched documents.
+	 * @limit How many documents to return
+	 * @skip How many matching documents to skip before returning results
+	 * @raw Whether or not to force returning the raw document(s)
 	 **/
 	public struct function replaceByExample(required struct example, required struct update, numeric limit, boolean waitForSync) {
 		var srequest = {
@@ -212,6 +232,9 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Deletes all documents matching the {example}, up to {limit}
+	 * @example A partial document to match against
+	 * @limit How many documents to delete
+	 * @waitForSync Flag for the server to wait until the changes have been synced to disk.
 	 **/
 	public struct function deleteByExample(required struct example, numeric limit, boolean waitForSync) {
 		var srequest = {
@@ -232,6 +255,7 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Create an index on this collection
+	 * @indexParams The index definition - refer to the ArangoDB /index API.
 	 **/
 	public struct function createIndex(required struct indexParams) {
 		return openService("index").post("?collection=#this.getName()#",indexParams);
@@ -239,6 +263,7 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	
 	/**
 	 * Drops an index - enforces this collection as the owner of the index.
+	 * @indexId The index identifier - similar to a document handle.
 	 **/
 	public struct function dropIndex(required string indexId) {
 		return openService("index").delete(this.getName() & "/" & indexId.replaceAll("^[^\/]+\/",""));
