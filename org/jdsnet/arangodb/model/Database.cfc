@@ -70,6 +70,10 @@ component accessors=true output=false persistent=false {
 	public org.jdsnet.arangodb.transaction.Transaction function prepareTransaction(string statement="") {
 		return new org.jdsnet.arangodb.transaction.Transaction(statement=statement,database=this);
 	}
+
+	public org.jdsnet.arangodb.transaction.Batch function prepareBatch() {
+		return new org.jdsnet.arangodb.transaction.Batch(database=this);
+	}
 	
 	public struct function getCollections(string type="user") {
 		
