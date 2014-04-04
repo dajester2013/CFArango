@@ -44,7 +44,7 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	 * Creates a document interface.  May be an existing document or a new document - the latter not being created until the save() method is called on the returned Document.
 	 * @document Initial raw document
 	 **/
-	public Document function newDocument(struct document={}) {
+	public Document function newDocument(struct data={}) {
 		var type = this.getProperties().type;
 		if (type == 2) {
 			return new Document(document,this);
