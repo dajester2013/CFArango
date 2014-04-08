@@ -34,6 +34,8 @@ component accessors=true output=false persistent=false {
 	
 	this.setErrorHandler(variables.errorHandler);
 	
+	_returnAll=false;
+	
 	private function doRequest(required string verb, string resource="", any data="") {
 		var svcRequest = new Http();
 		var svcUrl = this.getBaseUrl() & (len(resource) ? "/" & resource : ""); 
@@ -60,20 +62,32 @@ component accessors=true output=false persistent=false {
 		
 		var svcResult = svcRequest.send().getPrefix();
 		var responseData = isJson(svcResult.filecontent) ? deserializeJson(svcResult.filecontent) : svcResult.filecontent;
-		
-		if (svcResult.statusCode >= 400) {
-			if (!isNull(this.getErrorHandler()) && (isCustomFunction(this.getErrorHandler()) || structKeyExists(getMetaData(this.getErrorHandler()),"closure"))) {
-				var eh = this.getErrorHandler();
-				var ehrv = eh(svcUrl,svcResult,responseData);
-				if (!isNull(ehret)) return ehrv;
+		if (_returnAll) {
+			svcResult.responseData = responseData;
+			return svcResult;
+		} else {
+			if (svcResult.statusCode >= 300) {
+				if (!isNull(this.getErrorHandler()) && (isCustomFunction(this.getErrorHandler()) || structKeyExists(getMetaData(this.getErrorHandler()),"closure"))) {
+					var eh = this.getErrorHandler();
+					var ehrv = eh(svcUrl,svcResult,responseData);
+					if (!isNull(ehrv)) return ehrv;
+				} else {
+					return svcResult;
+				}
 			}
+			return responseData;
 		}
-		return responseData;
 	}
 	
 	private function errorHandler(svcUrl,svcResult,responseData) {
 		var ecode = isStruct(responseData) && structKeyExists(responseData,"errorNum") ? responseData.errorNum : svcResult.statusCode;
 		throw(type="ArangoServiceException",message="Service responded with an error. Requested ""#svcUrl#""",detail=svcResult.filecontent,errorCode=ecode);
+	}
+	
+	
+	public function returnAll() {
+		_returnAll=true;
+		return this;
 	}
 	
 	
@@ -158,6 +172,21 @@ component accessors=true output=false persistent=false {
 			data = "";
 		}
 		return doRequest("DELETE",res,data);
+	}
+	/**
+	 * HEAD request - metadata request
+	 **/
+	public function head(res,data) {
+		if (isNull(res)) {
+			res = "";
+			data = "";
+		} else if(!isValid("string",res) && isNull(data)) {
+			data = res;
+			res = "";
+		} else if (isNull(data)) {
+			data = "";
+		}
+		return doRequest("HEAD",res,data);
 	}
 	
 }

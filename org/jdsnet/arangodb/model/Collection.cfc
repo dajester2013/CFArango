@@ -47,9 +47,9 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	public Document function newDocument(struct data={}) {
 		var type = this.getProperties().type;
 		if (type == 2) {
-			return new Document(document,this);
+			return new Document(data,this);
 		} else if (type == 3) {
-			return new Edge(document,this);
+			return new Edge(data,this);
 		}
 	}
 	
@@ -79,6 +79,18 @@ component accessors=true output=false persistent=false implements="IDocumentFact
 	 **/
 	public struct function unload() {
 		return openService("collection").put("#this.getName()#/unload");
+	}
+	
+	/**
+	 * Check if a document exists in this collection
+	 * @key Document-handle or document key.
+	 **/
+	public boolean function exists(required string key) {
+		var result = openService("document")
+			.returnAll()
+			.head("#this.getname()#/#key#");
+		
+		return result.status_code >= 200 && result.status_code < 300;
 	}
 	
 	/**
