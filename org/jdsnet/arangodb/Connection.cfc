@@ -34,6 +34,7 @@ component accessors=true output=false persistent=false {
 	property number State;
 	property Credentials Credentials;
 	property string Database;
+	property boolean CacheServices default=false;
 	
 	this.setDatabase("_system");
 	
@@ -104,17 +105,33 @@ component accessors=true output=false persistent=false {
 	 * Opens a service client for a specific resource/database.  This will automatically open the connection if it is in an UNOPENED state.
 	 * @resource The ArangoDB API resource (the url portion following /_api/, ex. "document", or "collection")
 	 * @database The specific database to execute the service against, ex. "_system".
+	 * @cacheServices Whether or not to create a new service client or not.  Defaults to this.getCacheServices()
 	 **/
-	public ArangoDBRestClient function openService(string resource, string database=variables.database) {
+	public ArangoDBRestClient function openService(string resource, string database=variables.database, boolean cacheServices=this.getCacheServices()) {
 		if (this.getState() < this.OPENED) {
 			this.open();
 		} else if (this.getState() > this.OPENED) {
 			invalidState("The connection is not open.");
 		}
-		return new ArangoDBRestClient(
-			 baseUrl = this.getProtocol() & "://" & this.getHost() & ":" & this.getPort() & "/_db/" & arguments.database & "/_api/" & arguments.resource
-			,credentials = this.getCredentials()
-		);
+
+		var svcKey = resource & "@" & arguments.database;
+		var svc = "";
+
+		if (!cacheServices || isNull(serviceCache[svcKey])) {
+			svc = new ArangoDBRestClient(
+				 baseUrl = this.getProtocol() & "://" & this.getHost() & ":" & this.getPort() & "/_db/" & arguments.database & "/_api/" & arguments.resource
+				,credentials = this.getCredentials()
+			);
+
+		} else {
+			svc = serviceCache[svcKey];
+		}
+
+		if (cacheServices && isNull(serviceCache[svcKey])) {
+			serviceCache[svcKey] = svc;
+		}
+
+		return svc;
 	}
 	
 	/**

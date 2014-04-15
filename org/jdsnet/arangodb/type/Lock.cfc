@@ -21,5 +21,7 @@
  */
 
 interface {
+	public void function lock(any item);
 	public string function getType();
+	public array function getLocked();
 }

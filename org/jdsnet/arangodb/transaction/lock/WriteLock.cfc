@@ -26,7 +26,7 @@
  * @author jesse.shaffer
  * @date 2/17/14
  **/
- component implements="org.jdsnet.arangodb.type.Lock" {
+component extends="AbstractLock" {
 	public string function getType() {
 		return "write";
 	}

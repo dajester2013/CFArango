@@ -36,10 +36,11 @@ component accessors=true output=false persistent=false {
 
 	this.READ	= new lock.ReadLock();
 	this.WRITE	= new lock.WriteLock();
+	
+	this.setStatements([]);
+	this.setLockedCollections([]);
 
 	public Transaction function init(string statement, Database database) {
-		this.setStatements([]);
-		this.setLockedCollections([]);
 
 		if (!isNull(statement) && len(statement)) this.addStatement(statement);
 		if (!isNull(database)) this.setDatabase(database);
@@ -65,7 +66,7 @@ component accessors=true output=false persistent=false {
 		if (isObject(collection))
 			collection = collection.getName();
 		
-		arrayappend(this.getLockedCollections(),arguments);
+		type.lock(collection);
 		
 		return this;
 	}
@@ -81,6 +82,7 @@ component accessors=true output=false persistent=false {
 		return this;
 	}
 
+
 	/**
 	 * Execute the transaction.
 	 * @params Execution params
@@ -88,7 +90,7 @@ component accessors=true output=false persistent=false {
 	 **/
 	public Transaction function execute(struct params={}, boolean waitForSync) {
 		var svcRequest = {
-			 "collections"={"read":[],"write":[]}
+			 "collections"={"read":this.READ.getLocked(),"write":this.WRITE.getLocked()}
 			,"params"=params
 		};
 		
