@@ -5,9 +5,8 @@ CFML client library for ArangoDB.
 
 Requirements
 ===========
-Railo 4.1+
-or
-Adobe ColdFusion 10+
+* Railo 4.1+, or Adobe ColdFusion 10+
+* ArangoDB 1.4+, 2.0+
 
 Installation:
 =============
@@ -23,7 +22,7 @@ Installation:
         * Under **Archives & Resources > Component**, add a resouce:
             * **Name** = cfarango
             * **Resource** = /path/to/CFArango (*NOTE: do not add the /org to the resource path!*)
-
+r
     3. ACF custom tag path
         * Add /path/to/CFArango to the custom tags path
             * Can be set in the Administrator under **Extensions > Custom Tag Paths**
