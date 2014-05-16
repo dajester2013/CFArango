@@ -180,7 +180,7 @@ component accessors=true output=false persistent=false {
 			if (curBatch.batchSize == 0)
 				eof = true;
 			/* if we've iterated past the current batch, and there are no more batches, therefore eof */
-			else if (curBatch.curIdx < curBatch.batchSize && !curBatch.hasMore)
+			else if (curBatch.curIdx >= curBatch.batchSize && !curBatch.hasMore)
 				eof = true;
 		}
 		return !eof;
