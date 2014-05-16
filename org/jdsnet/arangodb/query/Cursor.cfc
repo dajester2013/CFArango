@@ -173,7 +173,16 @@ component accessors=true output=false persistent=false {
 	 */
 	public boolean function hasNext() {
 		var curBatch = this.getCurrentBatch();
-		eof = eof || !(curBatch.curIdx < curBatch.batchSize || curBatch.hasMore);
+
+		/* havent already reached eof */
+		if (!eof) {
+			/* a zero resultset is automatic eof */
+			if (curBatch.batchSize == 0)
+				eof = true;
+			/* if we've iterated past the current batch, and there are no more batches, therefore eof */
+			else if (curBatch.curIdx < curBatch.batchSize && !curBatch.hasMore)
+				eof = true;
+		}
 		return !eof;
 	}
 
@@ -225,7 +234,9 @@ component accessors=true output=false persistent=false {
 		}
 	}
 
-
+	/**
+	 * Get the current batch result as read from the server.
+	 **/
 	public struct function getCurrentBatch() {
 		if (isNull(variables._currentBatch)) {
 			readInitial();
@@ -233,11 +244,17 @@ component accessors=true output=false persistent=false {
 		return variables._currentBatch;
 	}
 
+/* PRIVATE METHODS */
 
+	/**
+	 * Execute a callback with the specified arguments.
+	 * @cb A callable function/closure
+	 * @args Struct/array to use as the arguments for the callback.
+	 **/
 	private function applyToCallback(required cb, required args) {
 		var _args = args;
 		if (isArray(args)) {
-			_args=[];
+			_args={};  // supposed to be a struct, not an array - this is a CF workaround.
 			for (var i=1; i<=arraylen(args); i++) _args[i]=args[i];
 		}
 
@@ -249,12 +266,17 @@ component accessors=true output=false persistent=false {
 		}
 	}
 
-
-
+	/**
+	 * Set the full count variable
+	 * @count The number of records to report as the "full count"
+	 **/
 	private function setFullCount(required numeric count) {
 		variables.FullCount = count;
 	}
 
+	/**
+	 * Gets the cursor service proxy
+	 **/
 	private function getService() {
 		if (isNull(variables._cursorService)) {
 			variables._cursorService = this.getDatabase().getConnection().openService("cursor",this.getDatabase().getName());
@@ -262,6 +284,9 @@ component accessors=true output=false persistent=false {
 		return variables._cursorService;
 	}
 
+	/**
+	 * Fetchs the first batch from the server for a query statement - this is the point at which the cursor is opened on the server-side.
+	 **/
 	private function readInitial() {
 		variables._currentBatch = getService().post({
 			 "query"		= this.getStatement().getStatement()
@@ -287,6 +312,9 @@ component accessors=true output=false persistent=false {
 		}
 	}
 
+	/**
+	 * Reads the next batch from the server for the current cursor.
+	 **/
 	private function readNextBatch() {
 		if (eof) {
 			throw("End of resultset has been reached");
