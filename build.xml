@@ -26,7 +26,7 @@ limitations under the License.
 	<property name="dist.dir"			location="${build.dir}/dist"/>
 	<property name="src.compile.dir"	location="${build.dir}/compile-source"/>
 	
-	<property name="ext.file"		   value="${dist.dir}/${ant.project.name}Extension.zip"/>
+	<property name="ext.file"		   value="${dist.dir}/${ant.project.name}.zip"/>
 	<property name="ext.src.file"	   value="${dist.dir}/${ant.project.name}-src.zip"/>
 
 	<tstamp prefix="stamp">
