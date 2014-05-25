@@ -1,0 +1,6 @@
+language: java
+before_install: ant init-ivy
+install: ant resolve
+jdk:
+  - oraclejdk7
+  - openjdk7
