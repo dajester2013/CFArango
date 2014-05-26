@@ -123,7 +123,7 @@ component accessors=true output=false persistent=false extends=Document {
 			}
 			
 			svc = openService();
-			svc._updater = openService()[this.getUpdateMode()]
+			svc._updater = openService()[this.getUpdateMode()];
 			svc._updater(variables.name,sReqDoc);
 		}
 		variables.originalDocument = duplicate(variables.currentDocument);
