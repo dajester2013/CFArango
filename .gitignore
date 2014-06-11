@@ -1,4 +1,4 @@
 index.cfm
 WEB-INF
 build/**
-/build
+!build/scripts

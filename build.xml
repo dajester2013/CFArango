@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<project name="CFArango" default="build" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="CFArango" default="build" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:ac="antlib:net.sf.antcontrib">
 	
 	<!--
 	================
@@ -27,17 +27,12 @@ limitations under the License.
 	<property name="dist.dir"			location="${build.dir}/dist"/>
 	<property name="src.compile.dir"	location="${build.dir}/compile-source"/>
 	
-<<<<<<< HEAD
 	<property name="ext.file"			value="${dist.dir}/${ant.project.name}.zip"/>
 	<property name="ext.src.file"		value="${dist.dir}/${ant.project.name}-src.zip"/>
 	
 	<property name="server.name"		value="localhost" />
 	<property name="server.port.http"	value="8099" />
 	<property name="server.port.stop"	value="8899" />
-=======
-	<property name="ext.file"		   value="${dist.dir}/${ant.project.name}.zip"/>
-	<property name="ext.src.file"	   value="${dist.dir}/${ant.project.name}-src.zip"/>
->>>>>>> refs/heads/develop
 
 	<tstamp prefix="stamp">
 	</tstamp>
@@ -47,6 +42,43 @@ limitations under the License.
 	</tstamp>
 	
 	<property file="build.properties" />
+	
+	<taskdef resource="net/sf/antcontrib/antlib.xml" uri="antlib:net.sf.antcontrib">
+		<classpath>
+			<fileset file="${build.dir}/scripts/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+	
+	<macrodef name="executeRailoTask">
+		<attribute name="task" />
+		<sequential>
+			<parallel>
+				<!-- server startup -->
+				<java jar="${build.dir}/deps/railo/start.jar" fork="true" dir="${build.dir}/deps/railo" outputproperty="log.railo.server.startup">
+					<jvmarg value="-Djetty.port=${server.port.http}"/>
+					<jvmarg value="-DSTOP.PORT=${server.port.stop}"/>
+					<jvmarg value="-DSTOP.KEY=railo"/>
+				</java>
+				<sequential>
+					<!-- wait for server to be ready, tell the user what's going on -->
+					<echo message="Waiting server startup..." />
+					<sleep seconds="30"/>
+					<echo message="done." />
+					
+					<!-- run task - the server is running now... -->
+					<antcall target="@{task}" inheritall="true" inheritrefs="true" />
+		
+					<!-- server shutdown -->
+					<echo message="Shutdown server" />
+					<java jar="${build.dir}/deps/railo/start.jar" fork="true" dir="${build.dir}/deps/railo" outputproperty="log.railo.server.shutdown">
+						<jvmarg value="-DSTOP.PORT=${server.port.stop}"/>
+						<jvmarg value="-DSTOP.KEY=railo"/>
+						<arg value="--stop"/>
+					</java>
+				</sequential>
+			</parallel>
+		</sequential>
+	</macrodef>
 	
 	<!--
 	===========
@@ -68,7 +100,7 @@ limitations under the License.
 	<property name="ivy.jar.dir" value="${ivy.home}/lib" />
 	<property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
 
-	<target name="install-ivy" unless="offline">
+	<target name="install-ant-dependencies" unless="offline">
 		<mkdir dir="${ivy.jar.dir}"/>
 		<!-- download Ivy from web site so that it can be used even without special installation -->
 		<get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true"/>
@@ -127,8 +159,16 @@ limitations under the License.
 	-->
 	<target name="test-railo" description="Run unit tests">
 		<ivy:retrieve conf="railo_test" pattern="${build.dir}/deps/[artifact].[ext]" />
+		<get src="${url.mxunit.download}" dest="${build.dir}/deps/mxunit.zip" />
 		<unzip dest="${build.dir}/deps/railo" src="${build.dir}/deps/railo.express.jetty.zip"></unzip>
-		<unzip dest="${build.dir}/deps/railo/webroot/mxunit" src="${build.dir}/deps/mxunit.zip"></unzip>
+		<unzip dest="${build.dir}/deps/railo/webroot/mxunit" src="${build.dir}/deps/mxunit.zip">
+		    <patternset>
+		        <include name="mxunit-master/**"/>
+		    </patternset>
+		    <mapper>
+		        <globmapper from="mxunit-master/*" to="*"/>
+		    </mapper>
+		</unzip>
 		<copy todir="${build.dir}/deps/railo/webroot">
 			<fileset dir="${src.dir}" includes="org/**" />
 			<fileset dir="${src.dir}" includes="tests/**" />
@@ -136,32 +176,7 @@ limitations under the License.
 		
 		<property name="mxunit.jar" value="${build.dir}/deps/railo/webroot/mxunit/ant/lib/mxunit-ant.jar" />
 		
-		<parallel>
-			<!-- server startup -->
-			<java jar="${build.dir}/deps/railo/start.jar" fork="true" dir="${build.dir}/deps/railo" outputproperty="log.railo.server.startup">
-				<jvmarg value="-Djetty.port=${server.port.http}"/>
-				<jvmarg value="-DSTOP.PORT=${server.port.stop}"/>
-				<jvmarg value="-DSTOP.KEY=railo"/>
-			</java>
-			
-			<sequential>
-				<!-- wait for server to be ready, tell the user what's going on -->
-				<echo message="Waiting server startup..." />
-				<sleep seconds="30"/>
-				<echo message="done." />
-				
-				<!-- run mxunit - the server is running now... -->
-				<antcall target="run-mxunit" />
-
-				<!-- server shutdown -->
-				<echo message="Shutdown server" />
-				<java jar="${build.dir}/deps/railo/start.jar" fork="true" dir="${build.dir}/deps/railo" outputproperty="log.railo.server.shutdown">
-					<jvmarg value="-DSTOP.PORT=${server.port.stop}"/>
-					<jvmarg value="-DSTOP.KEY=railo"/>
-					<arg value="--stop"/>
-				</java>
-			</sequential>
-		</parallel>
+		<executeRailoTask task="run-mxunit" />
 	</target>
 		
 	
@@ -218,7 +233,9 @@ limitations under the License.
 	<target name="clean" description="Cleanup build files">
 		<delete dir="${src.compile.dir}"/>
 		<delete dir="${dist.dir}"/>
-		<delete dir="${build.dir}"/>
+		<delete includeemptydirs="true">
+			<fileset dir="${build.dir}" includes="**/*" excludes="scripts/**" />
+		</delete>
 		<delete dir="${output.tests.dir}"/>
 	</target>
 
