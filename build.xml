@@ -27,12 +27,17 @@ limitations under the License.
 	<property name="dist.dir"			location="${build.dir}/dist"/>
 	<property name="src.compile.dir"	location="${build.dir}/compile-source"/>
 	
+<<<<<<< HEAD
 	<property name="ext.file"			value="${dist.dir}/${ant.project.name}.zip"/>
 	<property name="ext.src.file"		value="${dist.dir}/${ant.project.name}-src.zip"/>
 	
 	<property name="server.name"		value="localhost" />
 	<property name="server.port.http"	value="8099" />
 	<property name="server.port.stop"	value="8899" />
+=======
+	<property name="ext.file"		   value="${dist.dir}/${ant.project.name}.zip"/>
+	<property name="ext.src.file"	   value="${dist.dir}/${ant.project.name}-src.zip"/>
+>>>>>>> refs/heads/develop
 
 	<tstamp prefix="stamp">
 	</tstamp>

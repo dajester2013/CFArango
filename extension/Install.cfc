@@ -2,11 +2,11 @@
  * install
  * 
  * @author jesse.shaffer
- * @date 2/8/14
+ * @date 5/17/14
  **/
 component accessors=true output=true persistent=false {
 	
-	name	= "CFArangoCache";
+	name	= "CFArango";
 	id		= "org.jdsnet.arangodb.CFArango";
 	libs	= [];
 	
