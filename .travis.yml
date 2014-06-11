@@ -1,6 +1,6 @@
 language: java
-before_install: ant init-ivy
-install: ant resolve
+before_install: ant init-dependencies
+#install: ant resolve
 jdk:
   - oraclejdk7
   - openjdk7
