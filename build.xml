@@ -26,6 +26,7 @@ limitations under the License.
 	<property name="output.tests.dir"	location="test-results"/>
 	<property name="dist.dir"			location="${build.dir}/dist"/>
 	<property name="src.compile.dir"	location="${build.dir}/compile-source"/>
+	<property name="runtimes.dir"		location="${build.dir}/runtimes"/>
 	
 	<property name="ext.file"			value="${dist.dir}/${ant.project.name}.zip"/>
 	<property name="ext.src.file"		value="${dist.dir}/${ant.project.name}-src.zip"/>
@@ -34,6 +35,22 @@ limitations under the License.
 	<property name="server.port.http"	value="8099" />
 	<property name="server.port.stop"	value="8899" />
 
+	<property name="railo.version"		value="42" />
+
+	<condition property="runtimes.test.installed" value="true" else="false">
+		<and>
+			<available file="${runtimes.dir}/railo/start.jar" />
+			<available file="${runtimes.dir}/railo/webroot/mxunit/index.cfm" />
+		</and>
+	</condition>
+
+	<condition property="runtimes.compiler.installed" value="true" else="false">
+		<and>
+			<available file="${runtimes.dir}/railo/start" />
+			<available file="${runtimes.dir}/railo/webroot/rcs/Application.cfc" />
+		</and>
+	</condition>
+	
 	<tstamp prefix="stamp">
 	</tstamp>
 	<tstamp prefix="created">
@@ -54,7 +71,7 @@ limitations under the License.
 		<sequential>
 			<parallel>
 				<!-- server startup -->
-				<java jar="${build.dir}/deps/railo/start.jar" fork="true" dir="${build.dir}/deps/railo" outputproperty="log.railo.server.startup">
+				<java jar="${runtimes.dir}/railo/start.jar" fork="true" dir="${runtimes.dir}/railo" outputproperty="log.railo.server.startup">
 					<jvmarg value="-Djetty.port=${server.port.http}"/>
 					<jvmarg value="-DSTOP.PORT=${server.port.stop}"/>
 					<jvmarg value="-DSTOP.KEY=railo"/>
@@ -70,7 +87,7 @@ limitations under the License.
 		
 					<!-- server shutdown -->
 					<echo message="Shutdown server" />
-					<java jar="${build.dir}/deps/railo/start.jar" fork="true" dir="${build.dir}/deps/railo" outputproperty="log.railo.server.shutdown">
+					<java jar="${runtimes.dir}/railo/start.jar" fork="true" dir="${runtimes.dir}/railo" outputproperty="log.railo.server.shutdown">
 						<jvmarg value="-DSTOP.PORT=${server.port.stop}"/>
 						<jvmarg value="-DSTOP.KEY=railo"/>
 						<arg value="--stop"/>
@@ -85,10 +102,12 @@ limitations under the License.
 	Build setup
 	===========
 	-->
-	<target name="init">
+	<target name="init" unless="initialized">
 		<mkdir dir="${build.dir}"/>
 		<mkdir dir="${dist.dir}"/>
+		<mkdir dir="${runtimes.dir}"/>
 		<mkdir dir="${src.compile.dir}"/>
+		<property name="initialized" value="true" />
 	</target>
 	
 	<property name="ivy.install.version" value="2.4.0-rc1" />
@@ -100,12 +119,42 @@ limitations under the License.
 	<property name="ivy.jar.dir" value="${ivy.home}/lib" />
 	<property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
 
-	<target name="install-dependencies" unless="offline">
+	<target name="install-ivy" unless="offline">
 		<mkdir dir="${ivy.jar.dir}"/>
 		<!-- download Ivy from web site so that it can be used even without special installation -->
-		<get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true"/>
+		<get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true" verbose="true" />
 	</target>
-
+	
+	<target name="install-arangodb-travis" unless="offline" depends="init">
+		<property name="arangodb.version" value="2.1" />
+		<get src="http://www.arangodb.org/repositories/travisCI/setup_arangodb_2.1.sh" dest="${runtimes.dir}" usetimestamp="true" verbose="true" />
+		<exec executable="sh">
+			<arg value="${runtimes.dir}/setup_arangodb_2.1.sh"/>
+		</exec>
+	</target>
+	
+	<target name="install-railo" unless="skipRailoInstall" depends="init">
+		<ivy:retrieve conf="railo${railo.version}" pattern="${runtimes.dir}/[artifact].[ext]" />
+		<unzip dest="${runtimes.dir}/railo" src="${runtimes.dir}/railo.express.jetty.zip"></unzip>
+		
+		<copy todir="${runtimes.dir}/railo/webroot">
+			<fileset dir="${src.dir}" includes="org/**" />
+			<fileset dir="${src.dir}" includes="tests/**" />
+		</copy>
+	</target>
+	
+	<target name="install-mxunit" unless="offline" depends="install-railo">
+		<get src="${url.mxunit.download}" dest="${runtimes.dir}/mxunit.zip" usetimestamp="true" verbose="true" />
+		<unzip dest="${runtimes.dir}/railo/webroot/mxunit" src="${runtimes.dir}/mxunit.zip">
+		    <patternset>
+		        <include name="mxunit-master/**"/>
+		    </patternset>
+		    <mapper>
+		        <globmapper from="mxunit-master/*" to="*"/>
+		    </mapper>
+		</unzip>
+	</target>
+	
 	<!--
 	===============
 	Compile targets
@@ -158,24 +207,11 @@ limitations under the License.
 	============
 	-->
 	<target name="test-railo" description="Run unit tests">
-		<ivy:retrieve conf="railo_test" pattern="${build.dir}/deps/[artifact].[ext]" />
-		<get src="${url.mxunit.download}" dest="${build.dir}/deps/mxunit.zip" />
-		<unzip dest="${build.dir}/deps/railo" src="${build.dir}/deps/railo.express.jetty.zip"></unzip>
-		<unzip dest="${build.dir}/deps/railo/webroot/mxunit" src="${build.dir}/deps/mxunit.zip">
-		    <patternset>
-		        <include name="mxunit-master/**"/>
-		    </patternset>
-		    <mapper>
-		        <globmapper from="mxunit-master/*" to="*"/>
-		    </mapper>
-		</unzip>
-		<copy todir="${build.dir}/deps/railo/webroot">
-			<fileset dir="${src.dir}" includes="org/**" />
-			<fileset dir="${src.dir}" includes="tests/**" />
-		</copy>
+		<fail unless="${runtimes.test.installed}" message="Runtime environment not setup (${runtimes.test.installed}). Please run 'ant install-dependencies'." />
 		
-		<property name="mxunit.jar" value="${build.dir}/deps/railo/webroot/mxunit/ant/lib/mxunit-ant.jar" />
+		<property name="mxunit.jar" value="${runtimes.dir}/railo/webroot/mxunit/ant/lib/mxunit-ant.jar" />
 		
+		<echo message="Executing Railo Tests..." />
 		<executeRailoTask task="run-mxunit" />
 	</target>
 		
@@ -233,9 +269,7 @@ limitations under the License.
 	<target name="clean" description="Cleanup build files">
 		<delete dir="${src.compile.dir}"/>
 		<delete dir="${dist.dir}"/>
-		<delete includeemptydirs="true">
-			<fileset dir="${build.dir}" includes="**/*" excludes="scripts/**" />
-		</delete>
+		<delete dir="${runtimes.dir}" />
 		<delete dir="${output.tests.dir}"/>
 	</target>
 

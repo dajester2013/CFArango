@@ -26,12 +26,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <configurations>
         <conf name="runtime" description="Additional run-time dependencies"/>
-        <conf name="railo_compile" description="Required to compile application" extends="runtime"/>
-        <conf name="railo_test"    description="Required for test only" extends="railo_compile"/>
+        
+        <conf name="railo40"		description="Railo 4.0 dependencies" extends="runtime"/>
+        <conf name="railo41"		description="Railo 4.1 dependencies" extends="runtime"/>
+        <conf name="railo42"		description="Railo 4.2 dependencies" extends="runtime"/>
+        <conf name="railoLatest"	description="Latest Railo release" extends="runtime"/>
+        
     </configurations>
 
 	<dependencies>
-		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.2+" conf="railo_compile->master" />
+		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.0+" conf="railo40->master" />
+		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.1+" conf="railo41->master" />
+		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.2+" conf="railo42->master" />
+		<dependency org="org.getrailo" name="railo.express.jetty" rev="latest.stable" conf="railoLatest->master" />
 		<!-- <dependency org="org.mxunit" name="mxunit" rev="2.1.3+" conf="railo_test->master" /> -->
 	</dependencies>
 
