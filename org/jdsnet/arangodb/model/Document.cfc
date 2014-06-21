@@ -71,6 +71,15 @@ component accessors=true output=false persistent=false {
 	}
 
 	/**
+	 * Set the document key
+	 * @key The new key for the document.
+	 **/
+	public Document function setKey(required string key) {
+		variables.currentDocument["_key"] = variables.key = arguments.key;
+		return this;
+	}
+
+	/**
 	 * Change the collection for this document.  Changing the collection of an existing document does not remove the document from the previous collection automatically.
 	 * @collection The new collection to save this document to.
 	 **/
@@ -137,10 +146,12 @@ component accessors=true output=false persistent=false {
 	 * @key The key to delete
 	 **/
 	public Document function clear(string key) {
-		if (!isNull(key)) {
-			structDelete(variables.currentDocument,key);
+		if (!isNull(arguments.key)) {
+			structDelete(variables.currentDocument,arguments.key);
 		} else {
-			structClear(variables.currentDocument);
+			for (var exKey in variables.currentDocument) {
+				if (left(exKey,1) != "_") structDelete(variables.currentDocument,exKey);
+			}
 		}
 		this.setUpdateMode(this.MODE_REPLACE);
 		dirty=true;
@@ -241,7 +252,7 @@ component accessors=true output=false persistent=false {
 	/**
 	 * Get the current document (read only)
 	 **/
-	public function getCurrentDocument() {return this.get();}
+	public struct function getCurrentDocument() {return this.get();}
 
 	/**
 	 * Get the original document (read only)
