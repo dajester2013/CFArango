@@ -16,12 +16,12 @@ component extends="mxunit.framework.TestCase" accessors=true output=false persis
 
 		assertEquals(this.conn.getState(), this.conn.OPENED, "Expected the connection to be in an OPENED state.");
 
-		this.db = this.conn.getDatabase();
+		variables.db = this.conn.getDatabase();
 	}
 
 	public function testGetInfo() {
-		var dbinfo = this.db.getInfo();
-		assertEquals(dbinfo.name, this.db.getName());
+		var dbinfo = db.getInfo();
+		assertEquals(dbinfo.name, db.getName());
 		assertTrue(dbinfo.isSystem);
 	}
 
@@ -32,6 +32,18 @@ component extends="mxunit.framework.TestCase" accessors=true output=false persis
 		} catch (any e) {
 			assertEquals(e.errorCode,1228);
 		}
+	}
+
+	public function testCreateDocumentCollection() {
+		var collection = db.createCollection("test_createdoccollection");
+		assertIsTypeOf(collection,"org.jdsnet.arangodb.model.Collection");
+		collection.drop();
+	}
+
+	public function testCreateEdgeCollection() {
+		var collection = db.createEdgeCollection("test_createdoccollection");
+		assertEquals(collection.getProperties().type,3);
+		collection.drop();
 	}
 
 }
