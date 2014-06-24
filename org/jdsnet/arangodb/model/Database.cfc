@@ -117,7 +117,8 @@ component accessors=true output=false persistent=false {
 			}
 		};
 		structAppend(collection,options);
-		collection["isSystem"]=false;
+		if (isNull(collection.isSystem))
+			collection["isSystem"]=left(arguments.name,1)=="_";
 		collection["type"]=2;
 		var result = cService.post(collection);
 		result.database=this;
@@ -138,7 +139,8 @@ component accessors=true output=false persistent=false {
 			}
 		};
 		structAppend(collection,options);
-		collection["isSystem"]=false;
+		if (isNull(collection.isSystem))
+			collection["isSystem"]=left(arguments.name,1)=="_";
 		collection["type"]=3;
 		var result = cService.post(collection);
 		result.database=this;
