@@ -24,14 +24,19 @@ component extends="mxunit.framework.TestCase" accessors=true output=false persis
 			 "isSystem"=true
 		});
 
+		// get an even number between 150-200 to use as the number of documents to create.
+		do {
+			variables.populatedSize = randrange(150,200);
+		} while(variables.populatedSize mod 2 > 0);
+
 		var docs=[];
 		/* save method test - struct */
-		for (var i=0; i<100; i++) {
+		for (var i=0; i<populatedSize; i++) {
 			arrayappend(docs,docCollection.save({
 				"uniqueId" = createuuid()
 			}));
 		}
-		for (var i=0; i<100; i+=2) {
+		for (var i=0; i<populatedSize; i+=2) {
 			docs[i+1].createEdge(edgeCollection).to(docs[i+2]).save();
 		}
 	}
@@ -61,7 +66,12 @@ component extends="mxunit.framework.TestCase" accessors=true output=false persis
 	}
 
 	public function testQBE() {
-		assertIsTypeOf(docCollection.queryByExample({}), "org.jdsnet.arangodb.query.Cursor");
+		var qbeall = docCollection.queryByExample({});
+
+		assertIsTypeOf(qbeall, "org.jdsnet.arangodb.query.Cursor");
+		assertEquals(qbeall.getCurrentCount(), populatedSize);
+		assertEquals(qbeall.getFullCount(), populatedSize);
+
 		assertIsTypeOf(docCollection.queryByExample(example={},limit="first"), "org.jdsnet.arangodb.model.Document");
 		assertIsStruct(docCollection.queryByExample(example={},limit="first",raw=true));
 	}
