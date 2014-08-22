@@ -52,6 +52,8 @@ component accessors=true output=false persistent=false {
 			batch.batchSize					= arraylen(batch.result);
 			variables._currentBatch			= batch;
 			variables._currentBatch.curIdx	= 0;
+			setCurrentCount(batch.batchSize);
+			setFullCount(batch.batchSize);
 			if (!isNull(batch.id)) {
 				this.setId(batch.id);
 			}
