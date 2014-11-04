@@ -1,3 +1,15 @@
+<!--- Example usage:
+  --- <cfset conn = new Connection()>
+  --- <cfset db = conn.getDatabase("_system")>
+  --- <cfimport taglib="/org/jdsnet/arangodb/taglib" prefix="adb">
+  --- <adb:query database="#db#" name="result">
+  ---    for doc in Collection return doc
+  --- </adb:query>
+  ---
+  --- "result" is, by default, a CFQuery object.  You can can set the "type" attribute of the query tag to cursor, array, or query.
+  --- <cfdump var="#result#">
+  --->
+
 <cfsilent>
 	<cfif not thistag.hasEndTag>
 		<cfthrow type="MissingTagException" message="The query tag requires a closing tag.">
@@ -22,9 +34,11 @@
 			<cfparam name="attributes.maxrows"		default="0"						type="numeric">
 			<cfparam name="attributes.limit"		default="#attributes.maxrows#"	type="numeric">
 
+			<!--- input params --->
+			<cfparam name="attributes.params"		default="#{}#"					type="struct">
 
 			<!--- internal data structures --->
-			<cfset thistag.queryparams = {}>
+			<cfset thistag.queryparams = duplicate(attributes.params)>
 		</cfcase>
 
 		<cfcase value="end">
