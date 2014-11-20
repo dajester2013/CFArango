@@ -39,12 +39,54 @@ component accessors=true output=false persistent=false {
 	variables.showCount		= true;
 	variables.showFullCount	= false;
 	
+	variables._services		= {};
+	
 	/**
 	 * Execute the statement.
 	 * @boundParams A struct of named params to bind to the execution
 	 */
 	public Cursor function execute(struct boundParams=variables.boundParams) {
 		return new Cursor(Statement=this, Params=arguments.boundParams);
+	}
+	
+	/**
+	 * Execute the statement as a DML statement (insert/update/remove).
+	 * At the moment, DML statements do not appear to support return values, 
+	 * so this method only returns true on successful execution, otherwise
+	 * an exception will be thrown.
+	 * 
+	 * @boundParams A struct of named params to bind to the execution
+	 **/
+	public boolean function executeUpdate(struct boundParams=variables.boundParams) {
+		getService("cursor").post({
+			 "query"	: this.getStatement()
+			,"bindVars"	: arguments.boundParams
+		});
+		
+		return true;
+	}
+	
+	/**
+	 * Retrieve the query plan for the current statement.  If the statement uses bound params, you must supply these values also.
+	 * @boundParams The params you would use to execute the statement with.
+	 **/
+	public struct function explain(struct boundParams=variables.boundParams) {
+		return getService("explain").post({
+			 "query"	: this.getStatement()
+			,"bindVars"	: boundParams
+		});
+	}
+	
+	/**
+	 * Validate the statement's syntax.
+	 **/
+	public boolean function validate() {
+		return getService("query")
+			.setErrorHandler(false)
+			.post({
+				 "query"	: this.getStatement()
+			})
+			.error;
 	}
 	
 	/**
@@ -83,6 +125,15 @@ component accessors=true output=false persistent=false {
 	 **/
 	public query function eachBatch(cb) {
 		return this.execute().eachBatch(cb);
+	}
+	
+	/**
+	 * Gets the requested service proxy from the current connection
+	 **/
+	private function getService(required string name) {
+		if (isNull(_services[name]))
+			_services[name] = this.getDatabase().getConnection().openService(arguments.name,this.getDatabase().getName());
+		return _services[name];
 	}
 	
 }
