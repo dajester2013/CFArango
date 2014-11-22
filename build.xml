@@ -206,9 +206,9 @@ limitations under the License.
 					errorproperty="mxunit.error"
 					failureproperty="mxunit.failed">
 			<directory
-				componentPath="tests"
-				packageName="tests"
-				path="/tests/"
+				componentPath="tests.automated"
+				packageName="tests.automated"
+				path="/tests/automated/"
 				recurse="true"
 				remoteMethod="run"/>
 		</mxunittask>
