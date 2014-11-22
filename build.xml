@@ -227,7 +227,7 @@ limitations under the License.
 			<fileset dir="${src.dir}" includes="org/**" />
 		</copy>
 		
-		<executeRailoTask task="call-railo-compiler-service"/>
+		<executeRailoTask task="compile-railo"/>
 	</target>
 
 	<target name="build-railo-extension" depends="init,build-railo-archive" description="Create extension archive">
