@@ -37,7 +37,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	<dependencies>
 		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.0+" conf="railo40->master" />
 		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.1+" conf="railo41->master" />
-		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.2+" conf="railo42->master" />
+		<dependency org="org.getrailo" name="railo.express.jetty" rev="4.2.0.009" conf="railo42->master" />
 		<dependency org="org.getrailo" name="railo.express.jetty" rev="latest.stable" conf="railoLatest->master" />
 		<!-- <dependency org="org.mxunit" name="mxunit" rev="2.1.3+" conf="railo_test->master" /> -->
 	</dependencies>
