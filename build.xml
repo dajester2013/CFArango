@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Copyright 2014 Jesse Shaffer
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <project name="CFArango" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:ac="antlib:net.sf.antcontrib">
-	
+
 	<!--
 	================
 	Build properties
 	================
-	-->	
+	-->
 	<property name="src.dir"			location=""/>
 	<property name="src.ext.dir"		location="extension"/>
 	<property name="build.dir"			location="build"/>
@@ -27,10 +27,10 @@ limitations under the License.
 	<property name="dist.dir"			location="${build.dir}/dist"/>
 	<property name="src.compile.dir"	location="${build.dir}/compile-source"/>
 	<property name="runtimes.dir"		location="${build.dir}/runtimes"/>
-	
+
 	<property name="ext.file"			value="${dist.dir}/${ant.project.name}.zip"/>
 	<property name="ext.src.file"		value="${dist.dir}/${ant.project.name}-src.zip"/>
-	
+
 	<property name="server.name"		value="localhost" />
 	<property name="server.port.http"	value="8099" />
 	<property name="server.port.stop"	value="8899" />
@@ -51,22 +51,22 @@ limitations under the License.
 			<istrue value="${runtimes.mxunit.installed}" />
 		</and>
 	</condition>
-	
+
 	<tstamp prefix="stamp">
 	</tstamp>
 	<tstamp prefix="created">
 		<format property="TODAY" pattern="MM/dd/yyyy" locale="en,US"/>
 		<format property="TSTAMP" pattern="HH:mm" locale="en,US"/>
 	</tstamp>
-	
+
 	<property file="build.properties" />
-	
+
 	<taskdef resource="net/sf/antcontrib/antlib.xml" uri="antlib:net.sf.antcontrib">
 		<classpath>
 			<fileset file="${build.dir}/scripts/ant-contrib-1.0b3.jar"/>
 		</classpath>
 	</taskdef>
-	
+
 	<macrodef name="executeRailoTask">
 		<attribute name="task" />
 		<sequential>
@@ -82,10 +82,10 @@ limitations under the License.
 					<echo message="Waiting Railo server startup..." />
 					<sleep seconds="30"/>
 					<echo message="done." />
-					
+
 					<!-- run task - the server is running now... -->
 					<ac:antcallback target="@{task}" inheritall="true" inheritrefs="true" return="mxunit.failed, mxunit.error" />
-		
+
 					<!-- server shutdown -->
 					<echo message="Shutdown server" />
 					<java jar="${runtimes.dir}/railo/start.jar" fork="true" dir="${runtimes.dir}/railo" outputproperty="log.railo.server.shutdown">
@@ -97,7 +97,7 @@ limitations under the License.
 			</parallel>
 		</sequential>
 	</macrodef>
-	
+
 	<!--
 	===========
 	Build setup
@@ -110,7 +110,7 @@ limitations under the License.
 		<mkdir dir="${src.compile.dir}"/>
 		<property name="initialized" value="true" />
 	</target>
-	
+
 	<property name="ivy.install.version" value="2.4.0-rc1" />
 	<condition property="ivy.home" value="${env.IVY_HOME}">
 		<isset property="env.IVY_HOME" />
@@ -125,7 +125,7 @@ limitations under the License.
 		<!-- download Ivy from web site so that it can be used even without special installation -->
 		<get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true" verbose="true" />
 	</target>
-	
+
 	<target name="install-arangodb-travis" depends="init">
 		<property name="arangodb.version" value="2.1" />
 		<get src="http://www.arangodb.org/repositories/travisCI/setup_arangodb_${arangodb.version}.sh" dest="${runtimes.dir}" usetimestamp="true" verbose="true" />
@@ -133,12 +133,12 @@ limitations under the License.
 			<arg value="${runtimes.dir}/setup_arangodb_${arangodb.version}.sh"/>
 		</exec>
 	</target>
-	
+
 	<target name="install-railo" unless="${runtimes.railo.installed}" depends="init">
 		<ivy:retrieve conf="railo${railo.version}" pattern="${runtimes.dir}/[artifact].[ext]" />
 		<unzip dest="${runtimes.dir}/railo" src="${runtimes.dir}/railo.express.jetty.zip"></unzip>
 	</target>
-	
+
 	<target name="install-mxunit" unless="${runtimes.mxunit.installed}" depends="install-railo">
 		<get src="${url.mxunit.download}" dest="${runtimes.dir}/mxunit.zip" usetimestamp="true" verbose="true" />
 		<unzip dest="${runtimes.dir}/railo/webroot/mxunit" src="${runtimes.dir}/mxunit.zip">
@@ -150,12 +150,12 @@ limitations under the License.
 		    </mapper>
 		</unzip>
 	</target>
-	
+
 	<target name="install-compilerservice" depends="install-railo">
 		<get src="https://github.com/dajester2013/RailoCompilerService/releases/download/v1.o/rcs.war" dest="${runtimes.dir}/rcs.zip" usetimestamp="true" verbose="true" />
 		<unzip dest="${runtimes.dir}/railo/webroot/rcs" src="${runtimes.dir}/rcs.zip" />
 	</target>
-	
+
 	<target name="setup-tests-libs" depends="install-railo,install-mxunit" description="Installs the library to the local build runtime for tests.">
 		<delete dir="${runtimes.dir}/railo/webroot/org" />
 		<delete dir="${runtimes.dir}/railo/webroot/tests" />
@@ -164,7 +164,7 @@ limitations under the License.
 			<fileset dir="${src.dir}" includes="tests/**" />
 		</copy>
 	</target>
-	
+
 	<!--
 	===============
 	Compile targets
@@ -177,7 +177,7 @@ limitations under the License.
 		<!-- clean up the log file... -->
 		<replaceregexp file="${build.dir}/compile-output.log" match="&lt;\/?(br|pre)\s*\/?>" replace="&#xD;" flags="g" />
 	</target>
-	
+
 	<!--
 	============
 	Test targets
@@ -185,15 +185,15 @@ limitations under the License.
 	-->
 	<target name="test-railo" depends="install-railo,install-mxunit,setup-tests-libs" description="Run unit tests">
 		<property name="mxunit.jar" value="${runtimes.dir}/railo/webroot/mxunit/ant/lib/mxunit-ant.jar" />
-		
+
 		<echo message="Executing Railo Tests..." />
 		<executeRailoTask task="run-mxunit" />
-		
+
 		<fail if="mxunit.error" message="An error occured running MXUnit" />
 		<fail if="mxunit.failed" message="At least one unit test failed" />
 	</target>
-		
-	
+
+
 	<target name="run-mxunit">
 		<taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
 		<delete dir="${output.tests.dir}"/>
@@ -212,25 +212,26 @@ limitations under the License.
 				recurse="true"
 				remoteMethod="run"/>
 		</mxunittask>
-		
+
 		<property name="test.msg" value="mxunit....done" />
 	</target>
-	
+
 	<!--
 	=====================
 	Build and run targets
 	=====================
 	--><!-- depends="test" -->
 
-	<target name="build-railo-archive" depends="test-railo">
+	<target name="build-railo-archive" depends="test-railo" unless="railo.tested">
 		<copy todir="${src.compile.dir}">
 			<fileset dir="${src.dir}" includes="org/**" />
 		</copy>
-		
-		<executeRailoTask task="compile-railo"/>
+
+		<executeRailoTask task="compile-railo" />
+		<property name="railo.tested" value="true" />
 	</target>
 
-	<target name="build-railo-extension" depends="init,build-railo-archive" description="Create extension archive">
+	<target name="build-extension-common" depends="init,test-railo" description="Create extension archive">
 		<copy file="LICENSE" tofile="${src.ext.dir}/license.txt" overwrite="true" />
 		<copy file="${src.ext.dir}/config.tpl.xml" tofile="${src.ext.dir}/config.xml" overwrite="true" />
 		<replace file="${src.ext.dir}/config.xml" token="{version}" value="${version}.${stamp.DSTAMP}${stamp.TSTAMP}" />
@@ -240,9 +241,21 @@ limitations under the License.
 			<zipfileset includes="**" excludes="**/config.tpl.xml" dir="${src.ext.dir}" />
 			<zipfileset includes="*.ra" dir="${dist.dir}" />
 		</zip>
-		
+
 		<delete file="${src.ext.dir}/config.xml" />
 		<delete file="${src.ext.dir}/license.txt" />
+	</target>
+
+	<target name="build-ra-extension" depends="build-railo-archive,build-extension-common">
+		<zip destfile="${ext.file}" update="true">
+			<zipfileset includes="*.ra" dir="${dist.dir}" />
+		</zip>
+	</target>
+
+	<target name="build-src-extension" depends="build-extension-common">
+		<zip destfile="${ext.file}" update="true">
+			<zipfileset includes="org/**" excludes="${ext.file}" dir="${src.dir}" prefix="CFArango" />
+		</zip>
 	</target>
 
 	<!--
