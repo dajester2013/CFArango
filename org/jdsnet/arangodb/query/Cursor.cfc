@@ -55,7 +55,7 @@ component accessors=true output=false persistent=false {
 			setCurrentCount(batch.batchSize);
 			setFullCount(batch.batchSize);
 			if (!isNull(batch.id)) {
-				this.setId(batch.id);
+				setId(batch.id);
 			}
 		} else {
 			for (var k in arguments) if (!isNull(arguments[k])) {
@@ -66,6 +66,11 @@ component accessors=true output=false persistent=false {
 				} else {
 					variables[k] = arguments[k];
 				}
+			}
+
+			// if we have the necessary parts to execute the query, immediately call it.
+			if (!isNull(this.getStatement()) && !isNull(this.getDatabase())) {
+				readInitial();
 			}
 		}
 		return this;
@@ -109,7 +114,9 @@ component accessors=true output=false persistent=false {
 			var doc = this.next(false);
 
 			if (!IsStruct(doc)) {
-				throw("Cannot convert to query - expected collection of objects");
+				doc = {
+					"result":doc
+				};
 			} else if (isInstanceOf(doc,"Document")) {
 				doc = doc.get();
 			}
@@ -269,6 +276,21 @@ component accessors=true output=false persistent=false {
 	}
 
 	/**
+	 * Set the ID
+	 **/
+	private function setCurrentCount(required string id) {
+		variables.Id = id;
+	}
+
+	/**
+	 * Set the current count variable
+	 * @count The number of records to report as the "current count"
+	 **/
+	private function setCurrentCount(required numeric count) {
+		variables.CurrentCount = count;
+	}
+
+	/**
 	 * Set the full count variable
 	 * @count The number of records to report as the "full count"
 	 **/
@@ -290,6 +312,9 @@ component accessors=true output=false persistent=false {
 	 * Fetchs the first batch from the server for a query statement - this is the point at which the cursor is opened on the server-side.
 	 **/
 	private function readInitial() {
+		if (isNull(this.getStatement())) {
+			throw("No statement provided");
+		}
 		variables._currentBatch = getService().post({
 			 "query"		= this.getStatement().getStatement()
 			,"batchSize"	= this.getStatement().getBatchSize()
@@ -303,7 +328,7 @@ component accessors=true output=false persistent=false {
 		variables._currentBatch.batchSize = arraylen(variables._currentBatch.result);
 
 		if (structKeyExists(variables._currentBatch,"id")) {
-			this.setId(variables._currentBatch.id);
+			setId(variables._currentBatch.id);
 		}
 
 		if (	structKeyExists(variables._currentBatch,"extra")
@@ -311,6 +336,10 @@ component accessors=true output=false persistent=false {
 			setFullCount(variables._currentBatch.extra.fullCount);
 		} else {
 			setFullCount(variables._currentBatch.count);
+		}
+
+		if (_currentBatch.batchSize == 0) {
+			eof = true;
 		}
 	}
 
@@ -321,7 +350,7 @@ component accessors=true output=false persistent=false {
 		if (eof) {
 			throw("End of resultset has been reached");
 		}
-		variables._currentBatch				= getService().put(variables._currentBatch.id);
+		variables._currentBatch				= getService().put(this.getId());
 		variables._currentBatch.curIdx		= 0;
 		variables._currentBatch.batchSize	= arraylen(variables._currentBatch.result);
 	}
