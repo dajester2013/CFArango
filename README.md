@@ -3,9 +3,9 @@ CFArango
 
 CFML client library for ArangoDB.
 
-master: ![Build Status: master](https://travis-ci.org/dajester2013/CFArango.svg?branch=master)
+master: [![Build Status: master](https://travis-ci.org/dajester2013/CFArango.svg?branch=master)](https://travis-ci.org/dajester2013/CFArango?branch=master)
 
-develop: ![Build Status: develop](https://travis-ci.org/dajester2013/CFArango.svg?branch=develop)
+develop: [![Build Status: develop](https://travis-ci.org/dajester2013/CFArango.svg?branch=develop)](https://travis-ci.org/dajester2013/CFArango?branch=develop)
 
 Requirements
 ===========
