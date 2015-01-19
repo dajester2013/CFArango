@@ -127,7 +127,7 @@ limitations under the License.
 	</target>
 
 	<target name="install-arangodb-travis" depends="init">
-		<property name="arangodb.version" value="2.1" />
+		<property name="arangodb.version" value="2.4" />
 		<get src="http://www.arangodb.org/repositories/travisCI/setup_arangodb_${arangodb.version}.sh" dest="${runtimes.dir}" usetimestamp="true" verbose="true" />
 		<exec executable="sh">
 			<arg value="${runtimes.dir}/setup_arangodb_${arangodb.version}.sh"/>
