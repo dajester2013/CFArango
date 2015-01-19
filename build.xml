@@ -32,7 +32,7 @@ limitations under the License.
 	<property name="ext.src.file"		value="${dist.dir}/${ant.project.name}-src.zip"/>
 
 	<property name="server.name"		value="localhost" />
-	<property name="server.port.http"	value="8099" />
+	<property name="server.port.http"	value="80" />
 	<property name="server.port.stop"	value="8899" />
 
 	<property name="railo.version"		value="42" />
@@ -196,7 +196,7 @@ limitations under the License.
 
 	<target name="run-mxunit">
 		<taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
-		<delete dir="${output.tests.dir}"/>
+		<!--<delete dir="${output.tests.dir}"/>-->
 		<mkdir dir="${output.tests.dir}"/>
 		<mxunittask	defaultrunner="/mxunit/runner/HttpAntRunner.cfc"
 					outputdir="${output.tests.dir}"
