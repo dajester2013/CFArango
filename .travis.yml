@@ -1,7 +1,0 @@
-language: java
-before_install: ant install-ivy
-install: 
-  - ant install-arangodb-travis
-  - ant install-mxunit
-script: ant test-railo
-jdk: oraclejdk7

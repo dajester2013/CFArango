@@ -1,5 +1,1 @@
-index.cfm
-WEB-INF
-build/**
-!build/scripts
-/test-results/
+/target/
