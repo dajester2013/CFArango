@@ -18,8 +18,6 @@ component accessors=true {
 	ThrowOnHttpError	= true;
 
 	public struct function executeApiRequest(string api, any data="", string method="GET") {
-		writedump(arguments);
-
 		var rawResult = {};
 
 		var urlData = "";
@@ -88,8 +86,9 @@ component accessors=true {
 		});
 	}
 
-	public Collection function getCollection(required string name) {
-		return new model.Collection(this, name);
+	public function getCollection(required string name) {
+		if (this.executeApiRequest("collection/#name#").status.code < 300)
+			return new model.Collection(this, name);
 	}
 
 }
