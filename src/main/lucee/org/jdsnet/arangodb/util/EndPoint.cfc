@@ -26,26 +26,36 @@ import org.jdsnet.arangodb.driver;
  * Base model
  **/
 component accessors=true {
-	
+
 	property name="driver"	type="Driver" setter=false;
 	property name="path"	type="string" setter=false;
 	property name="methods"	type="array"  setter=false;
-	
+
 	public function init(Driver driver, string path, methods=["get","post","put","patch","delete"]) {
 		variables.driver = arguments.driver;
 		variables.path = arguments.path;
 		variables.methods = arguments.methods;
-		
+
+		var createHelperMethod = function(methodName) {
+			return function(params, struct data) {
+				arguments.method = methodName;
+				return doRequest(argumentCollection=arguments);
+			};
+		};
+
+		var helpers = methods.reduce(function(methods={},methodName) {
+			methods[methodName] = createHelperMethod(methodName);
+			return methods;
+		});
+
+		structAppend(this, helpers);
+
 		return this;
 	}
-	
+
 	private struct function doRequest(params={}, struct data, method) {
-		if (!variables.methods.findNoCase(method)) {
-			throw("Invalid Method #method#");
-		}
-		
 		var apiPath = this.getPath();
-		
+
 		if (isNull(data) && (!find(":", apiPath) || !isStruct(params))) {
 			data = params;
 			params = {};
@@ -54,14 +64,8 @@ component accessors=true {
 				apiPath = apiPath.replaceNoCase(":#p#", params[p]);
 			}
 		}
-		
+
 		return driver.executeApiRequest(apiPath, data ?: "", method);
 	}
-	
-	public struct function get		(params, struct data) { arguments.method = "GET";	return doRequest(argumentCollection=arguments); }
-	public struct function post		(params, struct data) { arguments.method = "POST";	return doRequest(argumentCollection=arguments); }
-	public struct function put		(params, struct data) { arguments.method = "PUT";	return doRequest(argumentCollection=arguments); }
-	public struct function patch	(params, struct data) { arguments.method = "PATCH";	return doRequest(argumentCollection=arguments); }
-	public struct function delete	(params, struct data) { arguments.method = "DELETE";	return doRequest(argumentCollection=arguments); }
-	
+
 }
