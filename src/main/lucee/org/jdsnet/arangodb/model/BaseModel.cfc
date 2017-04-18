@@ -27,33 +27,33 @@ import org.jdsnet.arangodb.util.EndPoint;
  * Base model
  **/
 component accessors=true {
-	
+
 	property name="driver"		type="Driver";
 	property name="endpoints"	type="struct" setter=false getter=false;
-	
+
 	public function init(Driver driver) {
 		this.setDriver(driver);
 		endpoints = {};
 		return this;
 	}
-	
-	
+
+
 	private function defineEndpoint(name, path) {
 		var methods = javacast("null","");
 		var pathparts = path.split("@");
-		
+
 		if (arrayLen(pathparts) > 1) {
-			methods = [pathparts[1]];
-			path = pathparts[2]; 
+			methods = listToArray(pathparts[1]);
+			path = pathparts[2];
 		}
-		
+
 		endpoints[name] = new EndPoint(driver, path, methods);
 	}
-	
-	function defineEndpoints(struct endpoints) {
+
+	private function defineEndpoints(struct endpoints) {
 		for (var endpointName in arguments.endpoints) {
 			defineEndpoint(endpointName, arguments.endpoints[endpointName]);
 		}
 	}
-	
+
 }
