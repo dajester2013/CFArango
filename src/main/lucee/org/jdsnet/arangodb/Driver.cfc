@@ -1,23 +1,33 @@
 
 component accessors=true {
 
-	property type="boolean"	name="useSSL";
-	property type="string"	name="Host";
-	property type="numeric"	name="Port";
-	property type="string"	name="Database";
-	property type="string"	name="Username";
-	property type="string"	name="ThrowHttpError";
-	property type="string"	name="Password" getter=false;
+	property type="boolean"	name="useSSL" setter=false;
+	property type="string"	name="Host" setter=false;
+	property type="numeric"	name="Port" setter=false;
+	property type="string"	name="Database" setter=false;
+	property type="string"	name="Username" setter=false;
+	property type="string"	name="ThrowHttpError" setter=false;
+	property type="string"	name="Password" setter=false getter=false;
 
-	useSSL				= false;
-	Host				= "localhost";
-	Port				= 8529;
-	Database			= "_system";
-	Username			= "";
-	Password			= "";
-	ThrowOnHttpError	= true;
+	public Driver function init(
+		Host				= "localhost",
+		Port				= 8529,
+		UseSSL				= false,
+
+		Database			= "_system",
+
+		Username			= "root",
+		Password			= "",
+
+		ThrowOnHttpError	= true
+	) {
+		structAppend(variables, arguments);
+
+		return this;
+	}
 
 	public struct function executeApiRequest(string api, any data="", string method="GET") {
+		_databaseLocked = true;
 		var rawResult = {};
 
 		var urlData = "";
@@ -44,7 +54,7 @@ component accessors=true {
 
 		cfhttp(
 			 result			= "rawResult"
-			,url			= "http" & (getUseSSL() ? "s" : "") & "://" & getHost() & "/_db/" & getDatabase() & "/_api/" & api & urlData
+			,url			= "http" & (UseSSL ? "s" : "") & "://" & Host & "/_db/" & Database & "/_api/" & api & urlData
 			,port			= getPort()
 			,method 		= method
 //			,throwOnError	= getThrowHttpError()
@@ -68,27 +78,8 @@ component accessors=true {
 		};
 	}
 
-	public struct function getDatabaseInfo() {
-		return this.executeApiRequest("database/current").data;
-	}
-
-	public struct function getCollections(type="user") {
-		var collections = this.executeApiRequest("collection").data.result;
-
-		return collections.reduce(function(result={}, c) {
-			if (
-					(c.isSystem && (type == "sys"||type == "all"))
-				||	(!c.isSystem && (type == "user"||type == "all"))
-			) {
-				result[c.name] = this.getCollection(c.name);
-			}
-			return result;
-		});
-	}
-
-	public function getCollection(required string name) {
-		if (this.executeApiRequest("collection/#name#").status.code < 300)
-			return new model.Collection(this, name);
+	public function getDatabase() {
+		return new model.Database(this, Database);
 	}
 
 }

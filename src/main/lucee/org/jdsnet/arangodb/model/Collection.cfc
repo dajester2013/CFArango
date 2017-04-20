@@ -42,31 +42,35 @@ component extends=BaseModel accessors=true {
 		super.init(driver);
 
 		defineEndpoints({
-			"Collection": "get,delete@/collection/:name",
-			"Rename": "put@/collection/:originalName/rename",
-			"Delete": "delete@/collection/:name",
-			"Checksum": "get@/collection/:name/checksum",
-			"Count": "get@/collection/:name/count",
-			"Figures": "get@/collection/:name/figures",
-			"Properties": "get,put@/collection/:name/properties",
-			"Revision": "get@/collection/:name/revision",
+			"Collection"	: "get,delete@/collection/#name#",
+			"Rename"		: "put@/collection/:originalName/rename",
+			"Delete"		: "delete@/collection/#name#",
 
-			"Load":"put@/collection/:name/load",
-			"Unload":"put@/collection/:name/unload",
+			"Details"		: "get@/collection/#name#/:type",
 
-			"Rotate":"put@/collection/:name/rotate",
-			"Truncate":"put@/collection/:name/truncate"
+			"Load"			: "put@/collection/#name#/load",
+			"Unload"		: "put@/collection/#name#/unload",
+
+			"Rotate"		: "put@/collection/#name#/rotate",
+			"Truncate"		: "put@/collection/#name#/truncate"
 		});
 
-		structAppend(variables, endpoints.Properties.get({name:name}).data);
+		structAppend(variables, endpoints.Details.get({name:name, type:"properties"}).data);
 
 		return this;
 	}
 
+	/**
+	 * Get collection information
+	 **/
 	public struct function getInfo() {
-		return endpoints.Collection.get({name: this.getName()}).data;
+		return endpoints.Collection.get().data;
 	}
 
+	/**
+	 * Rename this collection
+	 * @newName The new name for the collection
+	 **/
 	public Collection function rename(required string newName) {
 		result = endpoints.Rename.put({"originalName":getName()}, {"name":newName});
 
@@ -75,52 +79,76 @@ component extends=BaseModel accessors=true {
 		return this;
 	}
 
-	public boolean function drop() {
-		return !endpoints.Collection.delete({name:getName()}).error;
-	}
-
-
+	/**
+	 * Alter the waitForSync flag
+	 * @waitForSync Whether Arango should wait until documents are synchronized to disk
+	 **/
 	public function setWaitForSync(boolean waitForSync) {
-		if (!endpoints.Properties.put({name:getName()}, {waitForSync:arguments.waitForSync}).error) {
+		if (!endpoints.Properties.put({waitForSync:arguments.waitForSync}).error) {
 			variables.waitForSync = arguments.waitForSync;
 		}
 		return this;
 	}
 
+	/**
+	 * Alter the collection's journal size
+	 * @journalSize
+	 **/
 	public function setJournalSize(number journalSize) {
-		if (!endpoints.Properties.put({name:getName()}, {journalSize:arguments.journalSize}).error) {
+		if (!endpoints.Properties.put({journalSize:arguments.journalSize}).error) {
 			variables.journalSize = arguments.journalSize;
 		}
 		return this;
 	}
 
-
+	/**
+	 * Read the checksum of the collection
+	 **/
 	public function getChecksum() {
-		return endpoints.Checksum.delete({name:getName()}).data.checksum;
+		return endpoints.Details.get({type:"checksum"}).data.checksum;
 	}
+	/**
+	 * Read the number of documents in this collection
+	 **/
 	public function getCount() {
-		return endpoints.Count.delete({name:getName()}).data.count;
+		return endpoints.Details.get({type:"count"}).data.count;
 	}
+	/**
+	 * Read the figure information from the collection
+	 **/
 	public function getFigures() {
-		return endpoints.Figures.delete({name:getName()}).data.figures;
+		return endpoints.Details.get({type:"figures"}).data.figures;
 	}
+	/**
+	 * Read the current revision of the collection
+	 **/
 	public function getRevision() {
-		return endpoints.Revision.delete({name:getName()}).data.revision;
+		return endpoints.Details.get({type:"revision"}).data.revision;
 	}
 
+	/**
+	 * Request Arango to load the collection into memory
+	 **/
 	public struct function load() {
-		return endpoints.Load.put({name:getName()}).data;
+		return endpoints.Load.put().data;
 	}
+	/**
+	 * Request Arango to unload the collection from memory
+	 **/
 	public struct function unload() {
-		return endpoints.Unload.put({name:getName()}).data;
+		return endpoints.Unload.put().data;
 	}
 
-
+	/**
+	 * Rotate the collection's journal
+	 **/
 	public struct function rotate() {
 		return endpoints.Rotate.put({name:getName()});
 	}
 
-
+	/**
+	 * Delete all documents from the collection
+	 **/
 	public struct function truncate() {
 		return endpoints.Truncate.put({name:getName()}).data;
 	}

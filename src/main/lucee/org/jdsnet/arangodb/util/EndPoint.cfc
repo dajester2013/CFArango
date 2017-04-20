@@ -45,6 +45,7 @@ component accessors=true {
 
 		var helpers = methods.reduce(function(methods={},methodName) {
 			methods[methodName] = createHelperMethod(methodName);
+			methods.execute = methods.execute ?: methods[methodName];
 			return methods;
 		});
 
