@@ -50,7 +50,7 @@ component extends=BaseModel accessors=true {
 
 		endpoints.Collection.post({name:""}, options);
 
-		return getCollection(name);
+		return this.getCollection(name);
 	}
 
 	public Collection function createEdgeCollection(required string name, struct options={}) {
@@ -77,11 +77,13 @@ component extends=BaseModel accessors=true {
 	}
 
 	public function getCollection(required string name) {
-		var status = driver.executeApiRequest("collection/#name#").status.code;
-		if (status > 300 && status < 500)
-			return this.createCollection(name);
-		else
-			return new Collection(driver, name);
+		var result = driver.executeApiRequest("collection/#name#");
+
+		if (result.status.code < 300)
+			if (result.data.type == 2)
+				return new Collection(driver, name);
+			else
+				return new EdgeCollection(driver, name);
 	}
 
 }

@@ -37,7 +37,6 @@ component accessors=true {
 		return this;
 	}
 
-
 	private function defineEndpoint(name, path) {
 		var methods = javacast("null","");
 		var pathparts = path.split("@");

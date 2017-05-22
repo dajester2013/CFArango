@@ -37,6 +37,7 @@ component extends=BaseModel accessors=true {
 	property name="IndexBuckets" setter=false;
 	property name="Status" setter=false;
 	property name="Type" setter=false;
+	property name="TypeName" setter=false;
 
 	public function init(Driver driver, string name) {
 		super.init(driver);
@@ -57,7 +58,13 @@ component extends=BaseModel accessors=true {
 
 		structAppend(variables, endpoints.Details.get({name:name, type:"properties"}).data);
 
+		TypeName = Type == 2 ? "Document" : "Edge";
+
 		return this;
+	}
+
+	public function newDocument(struct data={}) {
+		return type == 2 ? new Document(data, driver, this) : new Edge(data, driver, this);
 	}
 
 	/**
