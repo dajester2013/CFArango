@@ -20,18 +20,25 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ *
+ */
 component extends=AbstractAPI {
 
-	public struct function createCursor(required string query, bindVars={}, batchSize=100, count=false, cache=false, memoryLimit=0, ttl=180, options={}) {
-		return Driver.executeApiRequest("cursor", arguments, "POST").data;
+	public struct function flush(boolean waitForSync, boolean waitForCollector) {
+		return callAdmin("wal/flush", arguments, "PUT").data;
 	}
 
-	public struct function readNextBatch(required numeric cursorId) {
-		return Driver.executeApiRequest("cursor/#cursorId#", arguments, "PUT").data;
+	public struct function getProperties() {
+		return callAdmin("wal/properties", "", "GET").data;
 	}
 
-	public boolean function free(required numeric cursorId) {
-		return Driver.executeApiRequest("cursor/#cursorId#", "", "DELETE").status.code == 200;
+	public struct function setProperties(required struct properties) {
+		return callAdmin("wal/properties", properties, "PUT").data;
+	}
+
+	public struct function getTransactionInfo() {
+		return callAdmin("wal/transactions", "", "GET").data;
 	}
 
 }

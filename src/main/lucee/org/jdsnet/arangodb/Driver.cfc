@@ -11,26 +11,29 @@ component accessors=true {
 	property type="struct"	name="Api" setter=false;
 
 	public Driver function init(
-		Host				= "localhost",
-		Port				= 8529,
-		UseSSL				= false,
+		string	Host			= "localhost",
+		numeric	Port			= 8529,
+		boolean	UseSSL			= false,
 
-		Database			= "_system",
+		string	Database		= "_system",
 
-		Username			= "root",
-		Password			= "",
+		string	Username		= "root",
+		string	Password		= "",
 
-		ThrowOnHttpError	= true
+		boolean	ThrowHttpError	= false
 	) {
 		structAppend(variables, arguments);
 
 		_Api = {
-			 "Admin"		: new org.jdsnet.arangodb.api.Admin(this)
-			,"AQL"			: new org.jdsnet.arangodb.api.AQL(this)
-			,"Collection"	: new org.jdsnet.arangodb.api.Collection(this)
-			,"Cursor"		: new org.jdsnet.arangodb.api.Cursor(this)
-			,"Document"		: new org.jdsnet.arangodb.api.Document(this)
-			,"Graph"		: new org.jdsnet.arangodb.api.Graph(this)
+			 "Admin"			: new org.jdsnet.arangodb.api.Admin(this)
+			,"AQL"				: new org.jdsnet.arangodb.api.AQL(this)
+			,"Collection"		: new org.jdsnet.arangodb.api.Collection(this)
+			,"Cursor"			: new org.jdsnet.arangodb.api.Cursor(this)
+			,"Document"			: new org.jdsnet.arangodb.api.Document(this)
+			,"Graph"			: new org.jdsnet.arangodb.api.Graph(this)
+			,"Simple"			: new org.jdsnet.arangodb.api.Simple(this)
+			,"Transaction"		: new org.jdsnet.arangodb.api.Transaction(this)
+			,"WriteAheadLog"	: new org.jdsnet.arangodb.api.WriteAheadLog(this)
 		};
 
 		Api = createObject("java", "java.util.Collections").unmodifiableMap(_Api);
@@ -85,7 +88,7 @@ component accessors=true {
 			,url			= "http" & (UseSSL ? "s" : "") & "://" & Host & "/_db/" & Database & api & urlData
 			,port			= getPort()
 			,method 		= method
-//			,throwOnError	= getThrowHttpError()
+			,throwOnError	= getThrowHttpError()
 			,username		= Username
 			,password		= Password
 		) {
@@ -98,6 +101,13 @@ component accessors=true {
 			if (len(bodyData))
 				cfhttpparam (type="body", value=bodyData);
 		}
+
+		if (rawResult.status_code == 401)
+			throw(type="org.jdsnet.arangodb.UnauthenticatedRequestException", message="Invalid credentials were supplied for this request.", detail=serializeJSON({
+				 url			= "http" & (UseSSL ? "s" : "") & "://" & Host & "/_db/" & Database & api & urlData
+				,port			= getPort()
+				,method 		= method
+			}));
 
 		return {
 			 "data"		: deserializeJSON(rawResult.FileContent)

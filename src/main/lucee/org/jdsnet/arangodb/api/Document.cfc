@@ -68,8 +68,4 @@ component extends=AbstractAPI {
 		return callAPI("document/#handle#", replacements, "PUT").data;
 	}
 
-	public function list(required string collection, required string type) {
-		return callAPI("simple/all-keys", {"collection":collection, "type":type}, "PUT").data;
-	}
-
 }
