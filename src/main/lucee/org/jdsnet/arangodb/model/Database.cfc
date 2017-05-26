@@ -34,23 +34,24 @@ component extends=BaseModel accessors=true {
 	public function init(Driver driver, string name) {
 		super.init(driver);
 
-		defineEndpoints({
-			"DatabaseInfo"		: "get@/database/current",
-			"Collection"		: "post,delete@/collection/:name"
-		});
+		CollectionApi = driver.getApi("Collection");
+		DatabaseApi = driver.getApi("Database");
 
-		structAppend(variables, endpoints.DatabaseInfo.get().data.result);
+		structAppend(variables, DatabaseApi.info());
 
 		return this;
 	}
 
 	public Collection function createCollection(required string name, struct options={}) {
 		options["name"] = name;
-		options["type"] = options.type ?: 2;
+		options["type"] = options.type ?: CollectionApi.DOCUMENT_COLLECTION;
 
-		endpoints.Collection.post({name:""}, options);
-
-		return this.getCollection(name);
+		if (!CollectionApi.create(options).error) {
+			if (options.type == CollectionApi.DOCUMENT_COLLECTION)
+				return new Collection(driver, name);
+			else
+				return new EdgeCollection(driver, name);
+		}
 	}
 
 	public Collection function createEdgeCollection(required string name, struct options={}) {
@@ -59,11 +60,11 @@ component extends=BaseModel accessors=true {
 	}
 
 	public boolean function dropCollection(required string name) {
-		return !endpoints.Collection.delete({name:name}).data.error;
+		return CollectionApi.drop(name);
 	}
 
 	public struct function getCollections(type="user") {
-		var collections = driver.executeApiRequest("collection").data.result;
+		var collections = driver.getApi("Collection").list();
 
 		return collections.reduce(function(result={}, c) {
 			if (
@@ -77,10 +78,10 @@ component extends=BaseModel accessors=true {
 	}
 
 	public function getCollection(required string name) {
-		var result = driver.executeApiRequest("collection/#name#");
+		var info = driver.getApi("Collection").get(name);
 
-		if (result.status.code < 300)
-			if (result.data.type == 2)
+		if (!isNull(info))
+			if (info.type == CollectionApi.DOCUMENT_COLLECTION)
 				return new Collection(driver, name);
 			else
 				return new EdgeCollection(driver, name);

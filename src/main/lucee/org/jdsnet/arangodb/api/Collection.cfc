@@ -26,7 +26,7 @@ component extends=AbstractAPI {
 	this.EDGE_COLLECTION = 3;
 
 	public array function list(boolean includeSystem=false) {
-		return callApi("collection", {"excludeSystem": !includeSystem}, "GET").data.result;
+		return callApi("collection", {"excludeSystem": (!includeSystem)}, "GET").data.result;
 	}
 
 	public struct function create(options={}) {
@@ -41,11 +41,14 @@ component extends=AbstractAPI {
 		return callApi("collection/#name#", "", "DELETE").status.code == 200;
 	}
 
-	public struct function info(required string name) {
-		return callApi("collection/#name#", "", "GET").data;
+	public struct function get(required string name) {
+		var result = callApi("collection/#name#", "", "GET");
+
+		if (result.status.code < 300)
+			return result.data;
 	}
 
-	public struct function getChecksum(required string name) {
+	public numeric function getChecksum(required string name) {
 		return callApi("collection/#name#/checksum", "", "GET").data.checksum;
 	}
 
@@ -65,8 +68,8 @@ component extends=AbstractAPI {
 		return callApi("collection/#name#/figures", "", "GET").data;
 	}
 
-	public struct function setProperties(boolean waitForSync, numeric journalSize) {
-		return callApi("collection/#name#/figures", "", "PUT").data;
+	public struct function setProperties(required string name, boolean waitForSync, numeric journalSize) {
+		return callApi("collection/#name#/properties", {"waitForSync": waitForSync, "journalSize":journalSize}, "PUT").data;
 	}
 
 	public struct function rename(required string name, required string newName) {
@@ -90,8 +93,8 @@ component extends=AbstractAPI {
 	}
 
 
-	public array function listIndexes(required string name) {
-		return callApi("index?collection=#name#", "", "GET").data.indexes;
+	public struct function listIndexes(required string name) {
+		return callApi("index?collection=#name#", "", "GET").data.identifiers;
 	}
 
 	public struct function createIndex(required string name, required string type, required array fields, minLength) {

@@ -29,6 +29,7 @@ component accessors=true {
 			,"AQL"				: new org.jdsnet.arangodb.api.AQL(this)
 			,"Collection"		: new org.jdsnet.arangodb.api.Collection(this)
 			,"Cursor"			: new org.jdsnet.arangodb.api.Cursor(this)
+			,"Database"			: new org.jdsnet.arangodb.api.Database(this)
 			,"Document"			: new org.jdsnet.arangodb.api.Document(this)
 			,"Graph"			: new org.jdsnet.arangodb.api.Graph(this)
 			,"Simple"			: new org.jdsnet.arangodb.api.Simple(this)
@@ -76,7 +77,7 @@ component accessors=true {
 			for (var item in data) api = listAppend(api, urlEncodedFormat(item), "/");
 
 		// finally, if it's a string/number, tack it on as a positional param
-		} else if (isSimpleValue(data)) {
+		} else if (isSimpleValue(data) && len(data)) {
 			api = listAppend(api, urlEncodedFormat(data), "/");
 
 		}
