@@ -37,7 +37,7 @@ component accessors=true {
 		variables.methods = arguments.methods;
 
 		var createHelperMethod = function(methodName) {
-			return function(params, struct data) {
+			return function(params, data, headers={}) {
 				arguments.method = methodName;
 				return doRequest(argumentCollection=arguments);
 			};
@@ -54,7 +54,7 @@ component accessors=true {
 		return this;
 	}
 
-	private struct function doRequest(params={}, struct data, method) {
+	private struct function doRequest(params={}, data, method, headers={}) {
 		var apiPath = this.getPath();
 
 		if (isNull(data) && (!find(":", apiPath) || !isStruct(params))) {

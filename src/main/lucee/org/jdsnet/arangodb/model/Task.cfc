@@ -20,39 +20,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import org.jdsnet.arangodb.Driver;
-import org.jdsnet.arangodb.util.EndPoint;
+import org.jdsnet.arangodb.driver;
 
 /**
- * Base model
+ * Collection model
  **/
-component accessors=true {
-
-	property name="driver"		type="Driver";
-	property name="endpoints"	type="struct" setter=false getter=false;
-
-	public function init(Driver driver) {
-		this.setDriver(driver);
-		endpoints = {};
-		return this;
-	}
-
-	private function defineEndpoint(name, path) {
-		var methods = javacast("null","");
-		var pathparts = path.split("@");
-
-		if (arrayLen(pathparts) > 1) {
-			methods = listToArray(pathparts[1]);
-			path = pathparts[2];
-		}
-
-		endpoints[name] = new EndPoint(driver, path, methods);
-	}
-
-	private function defineEndpoints(struct endpoints) {
-		for (var endpointName in arguments.endpoints) {
-			defineEndpoint(endpointName, arguments.endpoints[endpointName]);
-		}
-	}
+component extends=BaseModel accessors=true {
 
 }
