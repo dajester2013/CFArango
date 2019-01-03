@@ -20,4 +20,54 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-component {}
+component extends=AbstractAPI {
+
+	public struct function all(required string collection, numeric batchSize=100, numeric skip, numeric limit) {
+		var opts = {"collection":collection, "batchSize":batchSize};
+		if (!isNull(skip) && !isNull(limit)) {
+			structAppend(opts, {"skip":skip, "limit":limit});
+		}
+		return callApi("simple/all", opts, "PUT").data;
+	}
+
+	public function allKeys(required string collection, required string type) {
+		return callAPI("simple/all-keys", {"collection":collection, "type":type}, "PUT").data;
+	}
+
+	public struct function any(required string collection) {
+		return callApi("simple/any", "", "PUT").data;
+	}
+
+	public struct function byExample(required string collection, required struct example, numeric batchSize=100, numeric skip, numeric limit) {
+		var opts = {"collection":collection, "batchSize":batchSize, "example":example};
+		if (!isNull(skip) && !isNull(limit)) {
+			structAppend(opts, {"skip":skip, "limit":limit});
+		}
+		return callApi("simple/by-example", "", "PUT").data;
+	}
+
+	public struct function firstExample(required string collection, required struct example) {
+		return callApi("simple/first-example", arguments, "PUT").data;
+	}
+
+	public struct function lookupByKeys(required string collection, required array keys) {
+		return callApi("simple/lookup-by-keys", arguments, "PUT").data;
+	}
+
+	public struct function removeByExample(required string collection, required struct example, struct options) {
+		return callApi("simple/remove-by-example", arguments, "PUT").data;
+	}
+
+	public struct function removeByKeys(required string collection, required array keys, struct options) {
+		return callApi("simple/remove-by-keys", arguments, "PUT").data;
+	}
+
+	public struct function replaceByExample(required string collection, required struct example, required struct newValue, struct options) {
+		return callApi("simple/replace-by-example", arguments, "PUT").data;
+	}
+
+	public struct function updateByExample(required string collection, required struct example, required struct newValue, struct options) {
+		return callApi("simple/update-by-example", arguments, "PUT").data;
+	}
+
+}

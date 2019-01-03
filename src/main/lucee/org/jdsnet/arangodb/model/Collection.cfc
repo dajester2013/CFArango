@@ -34,7 +34,9 @@ component extends=BaseModel accessors=true {
 	property name="IsVolatile" setter=false;
 	property name="JournalSize" setter=false;
 	property name="KeyOptions" setter=false;
+	property name="WaitForSync" setter=false;
 	property name="IndexBuckets" setter=false;
+	property name="Figures" setter=false;
 	property name="Status" setter=false;
 	property name="Type" setter=false;
 	property name="TypeName" setter=false;
@@ -42,21 +44,11 @@ component extends=BaseModel accessors=true {
 	public function init(Driver driver, string name) {
 		super.init(driver);
 
-		defineEndpoints({
-			"Collection"	: "get,delete@/collection/#name#",
-			"Rename"		: "put@/collection/:originalName/rename",
-			"Delete"		: "delete@/collection/#name#",
+		CollectionApi = driver.getApi("Collection");
 
-			"Details"		: "get@/collection/#name#/:type",
+		structAppend(variables, CollectionApi.getProperties(name));
 
-			"Load"			: "put@/collection/#name#/load",
-			"Unload"		: "put@/collection/#name#/unload",
-
-			"Rotate"		: "put@/collection/#name#/rotate",
-			"Truncate"		: "put@/collection/#name#/truncate"
-		});
-
-		structAppend(variables, endpoints.Details.get({name:name, type:"properties"}).data);
+		TypeName = Type == CollectionApi.DOCUMENT_COLLECTION ? "Document" : "Edge";
 
 		TypeName = Type == 2 ? "Document" : "Edge";
 
@@ -64,14 +56,14 @@ component extends=BaseModel accessors=true {
 	}
 
 	public function newDocument(struct data={}) {
-		return type == 2 ? new Document(data, driver, this) : new Edge(data, driver, this);
+		return type == CollectionApi.DOCUMENT_COLLECTION ? new Document(data, driver, this) : new Edge(data, driver, this);
 	}
 
 	/**
 	 * Get collection information
 	 **/
 	public struct function getInfo() {
-		return endpoints.Collection.get().data;
+		return CollectionApi.info(this.getName());
 	}
 
 	/**
@@ -79,10 +71,7 @@ component extends=BaseModel accessors=true {
 	 * @newName The new name for the collection
 	 **/
 	public Collection function rename(required string newName) {
-		result = endpoints.Rename.put({"originalName":getName()}, {"name":newName});
-
-		if (!result.data.error) Name = newName;
-
+		structAppend(variables, CollectionApi.rename(getName(), newName));
 		return this;
 	}
 
@@ -91,9 +80,7 @@ component extends=BaseModel accessors=true {
 	 * @waitForSync Whether Arango should wait until documents are synchronized to disk
 	 **/
 	public function setWaitForSync(boolean waitForSync) {
-		if (!endpoints.Properties.put({waitForSync:arguments.waitForSync}).error) {
-			variables.waitForSync = arguments.waitForSync;
-		}
+		structAppend(variables, CollectionApi.setProperties(getName(), waitForSync, getJournalSize()));
 		return this;
 	}
 
@@ -102,62 +89,77 @@ component extends=BaseModel accessors=true {
 	 * @journalSize
 	 **/
 	public function setJournalSize(number journalSize) {
-		if (!endpoints.Properties.put({journalSize:arguments.journalSize}).error) {
-			variables.journalSize = arguments.journalSize;
-		}
+		structAppend(variables, CollectionApi.setProperties(getName(), getWaitForSync(), journalSize));
 		return this;
 	}
 
 	/**
 	 * Read the checksum of the collection
 	 **/
-	public function getChecksum() {
-		return endpoints.Details.get({type:"checksum"}).data.checksum;
+	public numeric function readChecksum() {
+		Checksum = CollectionApi.getChecksum(this.getName());
+		return Checksum;
 	}
 	/**
 	 * Read the number of documents in this collection
 	 **/
-	public function getCount() {
-		return endpoints.Details.get({type:"count"}).data.count;
+	public function readCount() {
+		Count = CollectionApi.getCount(this.getName());
+		return Count;
 	}
 	/**
 	 * Read the figure information from the collection
 	 **/
-	public function getFigures() {
-		return endpoints.Details.get({type:"figures"}).data.figures;
+	public function readFigures() {
+		Figures = CollectionApi.getFigures(this.getName());
+		return Figures;
 	}
 	/**
 	 * Read the current revision of the collection
 	 **/
-	public function getRevision() {
-		return endpoints.Details.get({type:"revision"}).data.revision;
+	public function readRevision() {
+		Revision = CollectionApi.getRevision(this.getName());
+		return Revision;
 	}
 
 	/**
 	 * Request Arango to load the collection into memory
 	 **/
 	public struct function load() {
-		return endpoints.Load.put().data;
+		return CollectionApi.load(getName());
 	}
 	/**
 	 * Request Arango to unload the collection from memory
 	 **/
 	public struct function unload() {
-		return endpoints.Unload.put().data;
+		return CollectionApi.unload(getName());
 	}
 
 	/**
 	 * Rotate the collection's journal
 	 **/
 	public struct function rotate() {
-		return endpoints.Rotate.put({name:getName()});
+		return CollectionApi.rotate(getName());
 	}
 
 	/**
 	 * Delete all documents from the collection
 	 **/
 	public struct function truncate() {
-		return endpoints.Truncate.put({name:getName()}).data;
+		return CollectionApi.truncate(getName());
+	}
+
+	public struct function getIndexes() {
+		return CollectionApi.listIndexes(getName());
+	}
+
+	public boolean function dropIndex(required string indexId) {
+		return CollectionApi.dropIndex(indexId);
+	}
+
+	public boolean function createIndex(required string type, required array fields, minLength) {
+		arguments["name"] = getName();
+		return CollectionApi.createIndex(argumentCollection=arguments);
 	}
 
 

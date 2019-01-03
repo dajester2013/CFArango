@@ -20,4 +20,25 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-component {}
+/**
+ *
+ */
+component extends=AbstractAPI {
+
+	public struct function flush(boolean waitForSync, boolean waitForCollector) {
+		return callAdmin("wal/flush", arguments, "PUT").data;
+	}
+
+	public struct function getProperties() {
+		return callAdmin("wal/properties", "", "GET").data;
+	}
+
+	public struct function setProperties(required struct properties) {
+		return callAdmin("wal/properties", properties, "PUT").data;
+	}
+
+	public struct function getTransactionInfo() {
+		return callAdmin("wal/transactions", "", "GET").data;
+	}
+
+}

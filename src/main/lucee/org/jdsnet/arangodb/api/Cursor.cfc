@@ -22,7 +22,7 @@
 
 component extends=AbstractAPI {
 
-	public struct function createCursor(query, bindVars={}, batchSize=100, count=false, cache=false, memoryLimit=0, ttl=180, options={}) {
+	public struct function createCursor(required string query, bindVars={}, batchSize=100, count=false, cache=false, memoryLimit=0, ttl=180, options={}) {
 		return Driver.executeApiRequest("cursor", {
 			 "query" = query
 			,"bindVars"=bindVars

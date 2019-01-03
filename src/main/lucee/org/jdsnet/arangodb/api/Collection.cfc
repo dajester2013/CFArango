@@ -26,7 +26,7 @@ component extends=AbstractAPI {
 	this.EDGE_COLLECTION = 3;
 
 	public array function list(boolean includeSystem=false) {
-		return callApi("collection", {"excludeSystem": !includeSystem}, "GET").data.result;
+		return callApi("collection", {"excludeSystem": (!includeSystem)}, "GET").data.result;
 	}
 
 	public struct function create(options={}) {
@@ -42,10 +42,13 @@ component extends=AbstractAPI {
 	}
 
 	public struct function info(required string name) {
-		return callApi("collection/#name#", "", "GET").data;
+		var result = callApi("collection/#name#", "", "GET");
+
+		if (result.status.code < 300)
+			return result.data;
 	}
 
-	public struct function getChecksum(required string name) {
+	public numeric function getChecksum(required string name) {
 		return callApi("collection/#name#/checksum", "", "GET").data.checksum;
 	}
 
@@ -65,8 +68,8 @@ component extends=AbstractAPI {
 		return callApi("collection/#name#/figures", "", "GET").data;
 	}
 
-	public struct function setProperties(boolean waitForSync, numeric journalSize) {
-		return callApi("collection/#name#/figures", "", "PUT").data;
+	public struct function setProperties(required string name, boolean waitForSync, numeric journalSize) {
+		return callApi("collection/#name#/properties", {"waitForSync": waitForSync, "journalSize":journalSize}, "PUT").data;
 	}
 
 	public struct function rename(required string name, required string newName) {
@@ -106,6 +109,17 @@ component extends=AbstractAPI {
 
 	public struct function getIndex(required string indexId) {
 		return callApi("index/#indexId#", "", "GET").data;
+	}
+
+	public array function getEdges(required string edgeCollection, required string vertexHandle, string direction) {
+		var params = {
+			"vertex":vertexHandle
+		};
+
+		if (!isNull(direction))
+			params["direction"] = direction;
+
+		return callApi("edges/#edgeCollection#", params, "GET").data.edges;
 	}
 
 }

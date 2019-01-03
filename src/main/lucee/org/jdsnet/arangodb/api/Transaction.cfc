@@ -20,4 +20,24 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-component {}
+component extends=AbstractAPI {
+
+	public struct function execute(string action, array collections=[], struct params={}, lockTimeout=30, waitForSync=false) {
+
+		var result = callApi("transaction", {
+			 "action"		: action
+			,"collections"	: collections
+			,"params"		: params
+			,"lockTimeout"	: lockTimeout
+			,"waitForSync"	: false
+		});
+
+		if (result.error) {
+			return result;
+		} else {
+			return result.result;
+		}
+
+	}
+
+}

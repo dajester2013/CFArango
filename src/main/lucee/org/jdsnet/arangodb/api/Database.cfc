@@ -20,4 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-component {}
+component extends=AbstractAPI {
+
+	public function info() {
+		return callApi("database/current", "", "GET").data.result;
+	}
+
+}
