@@ -57,7 +57,7 @@ component extends=AbstractAPI {
 	}
 
 	public struct function createEdge(required string graphName, required string collection, required struct document) {
-		return callAPI("gharial/#graphName#/edge/#collection#", {"collection":collection, "to":to, "from":from}, "POST").data;
+		return callAPI("gharial/#graphName#/edge/#collection#", document, "POST").data;
 	}
 
 	public boolean function dropEdge(required string graphName, required string handle) {
@@ -104,12 +104,20 @@ component extends=AbstractAPI {
 		return callAPI("gharial/#graphName#/vertex/#handle#", "", "DELETE").status.code < 300;
 	}
 
+	public struct function getVertex(required string graphName, required string handle) {
+		return callAPI("gharial/#graphName#/vertex/#handle#", "", "GET").data.vertex;
+	}
+
 	public struct function updateVertex(required string graphName, required string handle, required struct update) {
 		return callAPI("gharial/#graphName#/vertex/#handle#", update, "PATCH").data.vertex;
 	}
 
 	public struct function replaceVertex(required string graphName, required string handle, required struct update) {
 		return callAPI("gharial/#graphName#/vertex/#handle#", update, "PUT").data.vertex;
+	}
+
+	public struct function traverse(required struct traversal) {
+		return callAPI("traversal", traversal, "POST").data;
 	}
 
 }

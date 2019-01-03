@@ -5,10 +5,20 @@ component accessors=true {
 	property type="string"	name="Host" setter=false;
 	property type="numeric"	name="Port" setter=false;
 	property type="string"	name="Database" setter=false;
-	property type="string"	name="Username" setter=false;
-	property type="string"	name="ThrowHttpError" setter=false;
-	property type="string"	name="Password" setter=false getter=false;
+	property type="string"	name="Username";
+	property type="string"	name="Password";
 	property type="struct"	name="Api" setter=false;
+	property type="string"	name="ThrowHttpError" setter=false;
+
+	/** hide credentials */
+	function getUsername() {
+		return "******";
+	}
+	/** hide credentials */
+	function getPassword() {
+		return "******";
+	}
+
 
 	public Driver function init(
 		Host				= "localhost",
@@ -36,6 +46,32 @@ component accessors=true {
 		Api = createObject("java", "java.util.Collections").unmodifiableMap(_Api);
 
 		return this;
+	}
+
+	public function setConnectionString(string connStr) {
+		var uri = createObject("java","org.apache.commons.httpclient.URI").init(connStr, false);
+		var data = {
+			host = uri.getHost()
+			,port = uri.getPort() > -1 ? uri.getPort() : 8529
+			,useSSL = uri.getScheme() == "adbs"
+			,database = uri.getPath() ?: Database ?: "_system"
+		};
+
+		data.database = data.database.listFirst('/');
+
+		if (!isNull(uri.getEscapedUserInfo())) {
+			parts = uri.getEscapedUserInfo().split(":");
+			data.Username = parts[1];
+			data.Password = parts[2] ?: Password;
+		}
+
+		this.init(argumentCollection=data);
+
+		return this;
+	}
+
+	public function getConnectionString() {
+		return "adb#useSSL?"s":""#://#Host#:#Port#/#Database#";
 	}
 
 	public function getApi(string key) {
@@ -99,8 +135,12 @@ component accessors=true {
 				cfhttpparam (type="body", value=bodyData);
 		}
 
+		if (!rawResult.responseHeader.keyExists("status_code")) {
+			cfthrow(message=rawResult.FileContent, detail=rawResult.errorDetail,type="org.jdsnet.arangodb.ConnectionFailureException");
+		}
+
 		return {
-			 "data"		: deserializeJSON(rawResult.FileContent)
+			 "data"		: isJson(rawResult.FileContent) ? deserializeJSON(rawResult.FileContent) : (rawResult.FileContent?:javacast("null",""))
 			,"headers"	: rawResult.responseHeader
 			,"rawBody"	: rawResult.FileContent
 			,"status"	: {

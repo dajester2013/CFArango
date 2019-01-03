@@ -159,4 +159,27 @@ component extends=BaseModel accessors=true {
 	public struct function truncate() {
 		return endpoints.Truncate.put({name:getName()}).data;
 	}
+
+
+	
+
+	public function read(key) {
+		return this.getDriver().getDatabase().read("#this.getName()#/#key#");
+	}
+
+
+	public function write(data) {
+		return this.getDriver().getDatabase().write(data, this.getName());
+	}
+
+	public function delete(key) {
+		return this.getDriver().getDatabase().delete("#this.getName()#/#key#");
+	}
+
+
+	public function search(limit=0,skip=0, struct filters={}) {
+		return this.getDriver().getDatabase().search(this.getName(), limit, skip, filters);
+	}
+
+
 }

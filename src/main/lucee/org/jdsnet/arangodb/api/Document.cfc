@@ -60,7 +60,7 @@ component extends=AbstractAPI {
 		return callAPI("document/#handle#", "", "HEAD");
 	}
 
-	public function update(required string handle, required struct data) {
+	public function update(required string handle, required struct data, struct options) {
 		return callAPI("document/#handle#", data, "PATCH").data;
 	}
 

@@ -21,6 +21,10 @@ component extends=BaseModel accessors=true {
 			,count=true
 		);
 
+		if (cursor.error) {
+			cfthrow(message=cursor.errorMessage, errorCode=cursor.errorNum);
+		}
+		
 		var data = cursor.result;
 
 		while(cursor.hasMore) {

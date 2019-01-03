@@ -86,4 +86,121 @@ component extends=BaseModel accessors=true {
 				return new EdgeCollection(driver, name);
 	}
 
+	public function getGraph(required string name) {
+		var result = driver.executeApiRequest("gharial/#name#");
+
+		if (result.status.code < 300) {
+			return new Graph(driver,name);
+		}
+	}
+
+	public function read(required handle) {
+		return this.getDriver().getApi("Document").read(handle);
+	}
+
+	/**
+	 * Writes a document to the database
+	 *
+	 * @data struct or object to write to the database.  must be serializable to json.
+	 * @collection specify the collection name if the data does not have an _id key, or @DocumentId property
+	 * @merge in case of an update, whether to merge the data with the existing document or replace.  defaults to replace
+	 */
+	public function write(data, string collection, boolean merge=false) {
+		var docApi = this.getDriver().getApi("Document");
+
+		if (isObject(data)) {
+			var document = deserializeJson(serializeJSON(data));
+			var metadata = getMetadata(data);
+			var collectionName = metadata.collection ?: metadata.name.listLast(".");
+			
+			/* check for a key first */
+			if (!document.keyExists("_key")) {
+				var props = metadata.properties ?: arraynew(1);
+
+				for (var p in props) {
+					if (p.keyExists("DocumentKey")) {
+						document._key = document[p.name];
+						structDelete(document, p.name);
+						break;
+					}
+				}
+			}
+
+			structDelete(document,"_id");
+
+			this.write(document, collectionName);
+		} else if (isStruct(data)) {
+			var action = "create";
+
+			if (data.keyExists("_id")) {
+				action = merge ? "update" : "replace";
+			} else {
+				if (isNull(collection)) {
+					cfthrow(message="Collection name required.");
+				}
+				
+				// if theres a key, and the document exists, set the i
+				if (data.keyExists("_key")) {
+					if (docApi.header("#collection#/#data._key#").status.code < 300) {
+						data.id = "#collection#/#data._key#";
+						action = merge ? "update":"replace";
+					}
+				}
+			}
+
+			switch(action) {
+				case "create": return docApi.create(collection, data);
+				case "update": return docApi.update(data._id, data);
+				case "replace": return docApi.replace(data._id, data);
+			}
+		} else {
+			cfthrow(message="can only insert objects or structs");
+		}
+	}
+
+	public function delete(required string handle) {
+		return this.getDriver().getApi("Document").delete(handle);
+	}
+
+	
+
+	public function search(required string collection, limit=0,skip=0, struct filters={}) {
+		var filterUtil = new org.jdsnet.arangodb.util.FilterParser();
+
+		var params = {
+			"@collection":collection
+		};
+		
+		var filterStmt = "";
+		if (structCount(filters)) {
+			var parsed = filterUtil.parseStruct(filters, "$doc");
+			filterStmt = parsed.stmt;
+			structAppend(params, parsed.params);
+		}
+
+		var limitStmt = "";
+
+		if (limit+skip > 0) {
+			if(skip) params["skip"]=skip;
+			
+			params["limit"] = limit;
+
+			limitStmt = "LIMIT " & (skip ? "@skip, " : "") & "@limit";
+		}
+
+		var readStatement = this.prepareStatement("for $doc in @@collection #filterStmt# #limitStmt# return $doc");
+
+		return readStatement.execute(params).getData();
+	}
+
+
+	public function prepareStatement(required string aql) {
+		return new AQLQuery(this.getDriver(), aql);
+	}
+
+
+	public function documentExists(required string handle) {
+		return this.getDriver().getApi("Document").header(handle).status.code < 300;
+	}
+
 }

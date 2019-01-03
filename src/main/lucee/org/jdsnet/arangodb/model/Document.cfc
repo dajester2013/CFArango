@@ -51,7 +51,7 @@ component	extends		= BaseModel
 
 	updateMode = "replace";
 
-	function init(driver, data={}) {
+	function init(driver, data={}, org.jdsnet.arangodb.model.Collection collectionModel) {
 		super.init(driver);
 
 		this.setData(data);
@@ -67,6 +67,15 @@ component	extends		= BaseModel
 		}
 
 		if (data.keyExists("_rev")) rev = data._rev;
+
+		if (!isNull(collectionModel)) {
+			collection = collectionModel.getName();
+			structDelete(this, "setCollection");
+		}
+
+		variables.data.delete("_id");
+		variables.data.delete("_key");
+		variables.data.delete("_rev");
 	}
 
 
