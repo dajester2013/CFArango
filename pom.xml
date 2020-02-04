@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jdsnet</groupId>
 	<artifactId>cfarango</artifactId>
-	<version>0.0.1-alpha1</version>
+	<version>0.0.1-alpha2</version>
 	<name>CFArango</name>
 	<description>ArangoDB driver for ColdFusion and Lucee</description>
 	<packaging>lar</packaging>

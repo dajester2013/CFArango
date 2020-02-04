@@ -3,23 +3,27 @@ component extends=BaseModel accessors=true {
 	property string Statement;
 	property struct Parameters;
 
+	DEFAULT_OPTIONS={
+		batchSize: 100
+	};
+
 	public function init(Driver driver, string aql="") {
 		super.init(driver);
 
 		this.setStatement(aql);
 	}
 
-	public function execute(struct parameters=this.getParameters()) {
+	public function execute(struct parameters=this.getParameters(), struct options={}) {
 		var api = driver.getApi("Cursor");
 
 		parameters = parameters?:structnew();
 
-		var cursor = api.createCursor(
-			query=this.getStatement()
-			,bindVars=parameters
-			,batchSize=3
-			,count=true
-		);
+		structAppend(options, DEFAULT_OPTIONS);
+
+		options.query = this.getStatement();
+		options.bindVars = parameters;
+		
+		var cursor = api.createCursor(argumentCollection=options);
 
 		if (cursor.error) {
 			cfthrow(message=cursor.errorMessage, errorCode=cursor.errorNum);
