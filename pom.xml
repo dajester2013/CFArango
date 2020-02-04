@@ -1,27 +1,41 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.jdsnet</groupId>
-  <artifactId>cfarango</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>CFArango</name>
-  <description>ArangoDB driver for ColdFusion and Lucee</description>
-  <packaging>lar</packaging>
-  
-  <build>
-  	<plugins>
-  		<plugin>
-  			<groupId>org.jdsnet.maven.lucee</groupId>
-  			<artifactId>lar-maven-plugin</artifactId>
-  			<version>0.2.2-SNAPSHOT</version>
-  			<extensions>true</extensions>
-  		</plugin>
-  	</plugins>
-  </build>
-  
-  <pluginRepositories>
-  	<pluginRepository>
-  		<id>dajester2013-snapshots</id>
-  		<url>http://dajester2013.github.io/maven-snapshots/</url>
-  	</pluginRepository>
-  </pluginRepositories>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.jdsnet</groupId>
+	<artifactId>cfarango</artifactId>
+	<version>0.0.1-alpha1</version>
+	<name>CFArango</name>
+	<description>ArangoDB driver for ColdFusion and Lucee</description>
+	<packaging>lar</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jdsnet.maven.lucee</groupId>
+				<artifactId>lar-maven-plugin</artifactId>
+				<version>0.2.6</version>
+				<extensions>true</extensions>
+				<dependencies>
+					<dependency>
+						<groupId>org.lucee</groupId>
+						<artifactId>lucee</artifactId>
+						<version>5.3.3.62</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+	</build>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>dajester2013-snapshots</id>
+			<url>http://dajester2013.github.io/maven-snapshots/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/dajester2013/cfarango</url>
+		</repository>
+	</distributionManagement>
 </project>
