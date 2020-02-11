@@ -104,9 +104,9 @@
 
 		if (driver.getApi("Document").header(handle).status.code < 300) {
 			if (merge)
-				result = api.updateVertex(getName(), collection, handle, data);
+				result = api.updateVertex(getName(), handle, data);
 			else
-				result = api.replaceVertex(getName(), collection, handle, data);
+				result = api.replaceVertex(getName(), handle, data);
 		} else {
 			result = api.createVertex(getName(), collection, data);
 		}

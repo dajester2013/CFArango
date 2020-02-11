@@ -100,7 +100,7 @@ component accessors=true {
 		var bodyData = "";
 
 		// data goes into the body for POST/PUT/PATCH/DELETE requests
-		if (method != "GET") { //arrayFindNoCase(["POST","PUT","PATCH","DELETE"],method)
+		if (method != "GET" && method != "HEAD") { //arrayFindNoCase(["POST","PUT","PATCH","DELETE"],method)
 			bodyData = serializeJson(data);
 
 		// otherwise, serialize struct into url key-value pairs
